@@ -1,0 +1,1377 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>MSLIN 360° Feedback — Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Maven+Pro:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* Layout: narrow single column for the survey, widening for reports. Navy, lime, purple and gold on a cool paper ground. */
+  :root {
+    --brand: #5E3A99;
+    --brand-dark: #47287A;
+    --brand-tint: #EEE8F7;
+    --on-brand: #FFFFFF;
+    --navy: #0C2577;
+    --lime: #9ECA27;
+    --gold: #E3A92B;
+    --teal: #1F8A9B;
+    --stone: #5F6A88;
+    --stone-light: #9AA4C0;
+    --paper: #F4F6FB;
+    --paper-raised: #FFFFFF;
+    --ink: #1B2540;
+    --ink-soft: #46517A;
+    --line: #D5DCEE;
+    --focus: #0C2577;
+    --font-display: 'Maven Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --brand: #A98BE0; --brand-dark: #C9B4F2; --brand-tint: #2B2250; --on-brand: #160C2E;
+      --navy: #B9C8FF; --lime: #B5DC4A; --gold: #F0BB45; --teal: #4FC3D4;
+      --stone: #A3AECF; --stone-light: #66739C;
+      --paper: #0D1530; --paper-raised: #162046; --ink: #EEF1FA; --ink-soft: #B9C2DE;
+      --line: #2B3866; --focus: #F0BB45;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --brand: #A98BE0; --brand-dark: #C9B4F2; --brand-tint: #2B2250; --on-brand: #160C2E;
+    --navy: #B9C8FF; --lime: #B5DC4A; --gold: #F0BB45; --teal: #4FC3D4;
+    --stone: #A3AECF; --stone-light: #66739C;
+    --paper: #0D1530; --paper-raised: #162046; --ink: #EEF1FA; --ink-soft: #B9C2DE;
+    --line: #2B3866; --focus: #F0BB45;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    margin: 0;
+    color: var(--navy);
+  }
+  .app {
+    max-width: 640px;
+    margin: 0 auto;
+    padding-block: 32px 64px;
+    padding-left: max(20px, env(safe-area-inset-left, 0px));
+    padding-right: max(20px, env(safe-area-inset-right, 0px));
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+  .app.wide { max-width: 920px; }
+  .masthead {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 40px;
+    padding-bottom: 16px;
+    border-bottom: 3px solid var(--lime);
+  }
+  .masthead .program { font-size: 13px; color: var(--stone); letter-spacing: 0.02em; }
+  .masthead .mode { font-size: 13px; color: var(--brand-dark); font-weight: 600; }
+
+  .progress-wrap { margin-bottom: 36px; }
+  .progress-label { display: flex; justify-content: space-between; gap: 12px; font-size: 13px; color: var(--ink-soft); margin-bottom: 8px; }
+  .progress-track { display: flex; gap: 3px; height: 6px; }
+  .progress-seg { flex: 1; background: var(--line); border-radius: 2px; overflow: hidden; }
+  .progress-seg.done { background: var(--brand); }
+  .progress-seg.current { background: linear-gradient(90deg, var(--brand) 50%, var(--line) 50%); }
+
+  .screen { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+  .screen[hidden] { display: none; }
+
+  .start-hero { padding: 8px 0 28px; }
+  .start-hero h1 { font-size: 30px; line-height: 1.15; margin-bottom: 10px; text-wrap: balance; }
+  .start-hero p { color: var(--ink-soft); font-size: 15px; line-height: 1.55; max-width: 56ch; margin: 0; }
+
+  .role-choice { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 24px 0; }
+  .role-card {
+    text-align: left;
+    border: 1px solid var(--line);
+    background: var(--paper-raised);
+    border-radius: 3px;
+    padding: 18px 16px;
+    cursor: pointer;
+    font-family: inherit;
+    color: var(--ink);
+    transition: border-color .15s ease, box-shadow .15s ease;
+  }
+  .role-card:hover { border-color: var(--stone-light); }
+  .role-card.selected { border-color: var(--brand); box-shadow: inset 0 0 0 1px var(--brand); background: var(--brand-tint); }
+  .role-card .role-title { font-family: var(--font-display); font-size: 17px; margin-bottom: 6px; }
+  .role-card .role-desc { font-size: 13px; color: var(--ink-soft); line-height: 1.4; font-weight: 400; }
+
+  .field { margin-bottom: 18px; }
+  .field label { display: block; font-size: 13px; font-weight: 600; color: var(--ink-soft); margin-bottom: 6px; }
+  .field input[type=text], .field select {
+    width: 100%;
+    padding: 11px 12px;
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    background: var(--paper-raised);
+    color: var(--ink);
+    font-family: inherit;
+    font-size: 15px;
+  }
+  .field input[type=text]:focus-visible, .field select:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
+  .hint { font-size: 12.5px; color: var(--stone); line-height: 1.5; margin: 8px 0 0; max-width: 56ch; }
+  .form-error { color: var(--brand-dark); font-size: 13px; font-weight: 600; margin: 0 0 12px; }
+  .form-error[hidden] { display: none; }
+
+  .section-eyebrow { font-size: 13px; color: var(--stone); margin-bottom: 4px; }
+  .section-title { font-size: 24px; margin-bottom: 12px; text-wrap: balance; }
+  .section-rule { height: 4px; width: 44px; background: var(--lime); margin-bottom: 24px; }
+
+  .item { margin-bottom: 28px; }
+  .item.missing { box-shadow: -4px 0 0 var(--brand); padding-left: 10px; }
+  .item-prompt { font-size: 16px; line-height: 1.4; margin-bottom: 12px; }
+  .scale { display: flex; gap: 6px; }
+  .scale-opt { flex: 1; min-width: 0; position: relative; }
+  .scale-opt input { position: absolute; opacity: 0; pointer-events: none; }
+  .scale-opt label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 10px 4px 8px;
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    cursor: pointer;
+    text-align: center;
+    background: var(--paper-raised);
+    transition: border-color .12s ease, background .12s ease;
+  }
+  .scale-opt .num { font-family: var(--font-display); font-size: 17px; }
+  .scale-opt .txt { font-size: 10.5px; color: var(--ink-soft); line-height: 1.2; }
+  .item.importance { background: var(--brand-tint); padding: 14px 16px; border-radius: 3px; margin-bottom: 8px; }
+  .scale-opt input:checked + label { border-color: var(--brand); background: var(--brand-tint); }
+  .scale-opt input:checked + label .num { color: var(--brand-dark); }
+  .scale-opt input:focus-visible + label { outline: 2px solid var(--focus); outline-offset: 1px; }
+
+  .comment-field { margin-top: 8px; }
+  .comment-field label { display: block; font-size: 13px; color: var(--stone); margin-bottom: 6px; }
+  .comment-field textarea {
+    width: 100%;
+    min-height: 64px;
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    background: var(--paper-raised);
+    color: var(--ink);
+    font-family: inherit;
+    font-size: 14px;
+    resize: vertical;
+  }
+  .comment-field textarea:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
+
+  .nav-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: auto; padding-top: 28px; }
+  button { font-family: inherit; font-size: 14px; font-weight: 600; border-radius: 3px; padding: 12px 22px; cursor: pointer; border: 1px solid transparent; }
+  button:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+  .btn-primary { background: var(--brand); color: var(--on-brand); border-color: var(--brand); }
+  .btn-primary:hover { background: var(--brand-dark); border-color: var(--brand-dark); }
+  .btn-primary:disabled { opacity: .4; cursor: not-allowed; }
+  .btn-ghost { background: transparent; color: var(--ink-soft); border-color: var(--line); }
+  .btn-ghost:hover { border-color: var(--stone-light); color: var(--ink); }
+  .btn-ghost:disabled { opacity: .3; cursor: not-allowed; }
+  .btn-link { background: none; border: none; padding: 4px 6px; color: var(--brand-dark); text-decoration: underline; font-weight: 500; }
+
+  .exit-row { margin-top: 20px; font-size: 13px; color: var(--ink-soft); }
+  .exit-row[hidden], #exitConfirm[hidden], #exitBtn[hidden] { display: none; }
+  .done-head { padding-top: 8px; }
+  .done-mark { width: 40px; height: 40px; border: 2px solid var(--brand); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--brand-dark); font-family: var(--font-display); font-size: 18px; margin-bottom: 20px; }
+  .done-head h1 { font-size: 26px; margin-bottom: 10px; }
+  .done-head p { color: var(--ink-soft); line-height: 1.6; max-width: 56ch; margin: 0 0 8px; }
+  .summary-line { font-size: 13px; color: var(--stone); margin-top: 14px; }
+  .actions { display: flex; flex-wrap: wrap; gap: 10px; margin: 22px 0 8px; }
+  .dl-status { font-size: 13px; color: var(--ink-soft); min-height: 18px; margin: 0 0 8px; }
+  .fallback { border: 1px solid var(--line); background: var(--paper-raised); padding: 14px; border-radius: 3px; margin: 8px 0 16px; }
+  .fallback[hidden] { display: none; }
+  .fallback p { font-size: 13px; color: var(--ink-soft); margin: 0 0 8px; line-height: 1.5; }
+  .fallback textarea { width: 100%; min-height: 160px; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12px; padding: 10px; border: 1px solid var(--line); border-radius: 3px; background: var(--paper); color: var(--ink); margin-bottom: 8px; }
+  .prototype-note { margin-top: 28px; padding: 14px 16px; background: var(--brand-tint); border-left: 2px solid var(--brand); border-radius: 2px; font-size: 13px; color: var(--ink-soft); line-height: 1.5; }
+
+  .fac-actions { display: flex; flex-wrap: wrap; gap: 10px; margin: 4px 0 18px; }
+  .file-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+  .file-row .who { min-width: 0; overflow-wrap: anywhere; }
+  .file-row .fname { display: block; font-size: 12px; color: var(--stone); }
+  .fac-controls { display: flex; flex-wrap: wrap; gap: 18px 28px; align-items: center; margin: 18px 0 6px; font-size: 14px; }
+  .fac-controls label { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+  .fac-controls select { padding: 8px 10px; border: 1px solid var(--line); border-radius: 3px; background: var(--paper-raised); color: var(--ink); font-family: inherit; font-size: 14px; }
+  .fac-warn { font-size: 13px; color: var(--ink-soft); margin: 8px 0; }
+  .fac-controls fieldset { border: 0; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+  .fac-controls legend { font-size: 13px; font-weight: 600; color: var(--ink-soft); padding: 0; margin-bottom: 8px; }
+  .review { border: 1px solid var(--line); border-radius: 3px; background: var(--paper-raised); padding: 4px 16px 12px; margin: 18px 0 6px; }
+  .incl-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 6px 16px; margin: 6px 0 4px; }
+  .incl-grid label { display: flex; gap: 8px; align-items: flex-start; font-size: 14px; }
+  .review summary { cursor: pointer; font-weight: 600; padding: 10px 0; }
+  .rv-comp { font-size: 12px; font-weight: 600; color: var(--ink-soft); margin: 16px 0 2px; }
+  .rv-item { display: grid; grid-template-columns: auto minmax(0,1fr) auto; gap: 12px; align-items: start; padding: 9px 0; border-top: 1px solid var(--line); font-size: 14px; line-height: 1.45; }
+  .rv-item input[type=checkbox] { margin-top: 3px; width: 18px; height: 18px; }
+  .rv-item.off .rv-text { text-decoration: line-through; color: var(--stone); }
+  .rv-tag { font-size: 11px; color: var(--stone); }
+  .rv-edit textarea { width: 100%; min-height: 76px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 3px; background: var(--paper); color: var(--ink); font-family: inherit; font-size: 14px; }
+  .rv-actions { display: flex; gap: 10px; margin-top: 6px; }
+  #facReport, #reportBody { margin-top: 28px; }
+</style>
+</head>
+<body>
+
+<div class="app" id="app">
+
+  <div class="masthead">
+    <span class="program">MSLIN &middot; Leadership Development 360&deg;</span>
+    <span class="mode" id="modeLabel"></span>
+  </div>
+
+  <!-- START -->
+  <div class="screen" id="screen-start">
+    <div class="start-hero">
+      <h1>360&deg; Feedback</h1>
+      <p>This is a test version. Nothing is stored on a server. When you finish, you get a report on screen plus files you can download. Use it to check the wording, the length and the reports before the real tool is built.</p>
+    </div>
+
+    <div class="role-choice">
+      <button type="button" class="role-card selected" id="roleSelf" onclick="setRole('self')">
+        <div class="role-title">Self-Assessment</div>
+        <div class="role-desc">You're rating your own leadership.</div>
+      </button>
+      <button type="button" class="role-card" id="roleRater" onclick="setRole('rater')">
+        <div class="role-title">Rater Feedback</div>
+        <div class="role-desc">You're rating someone else's leadership.</div>
+      </button>
+    </div>
+
+    <div class="field">
+      <label id="nameLabel" for="nameInput">Your name</label>
+      <input type="text" id="nameInput" autocomplete="off" maxlength="80">
+    </div>
+    <div class="field" id="relField" hidden>
+      <label for="relInput">Your relationship to this person</label>
+      <select id="relInput">
+        <option value="peer">Peer</option>
+        <option value="manager">Manager</option>
+        <option value="direct report">Direct report</option>
+        <option value="other">Other</option>
+      </select>
+      <p class="hint">Choose Other if none of these fits.</p>
+    </div>
+    <p class="form-error" id="startError" role="alert" hidden></p>
+
+    <div class="nav-row">
+      <button type="button" class="btn-ghost" onclick="openFacilitator()">Facilitator: compare reports</button>
+      <button type="button" class="btn-primary" onclick="beginSurvey()">Begin &rarr;</button>
+    </div>
+  </div>
+
+  <!-- SURVEY -->
+  <div class="screen" id="screen-survey" hidden>
+    <div class="progress-wrap">
+      <div class="progress-label">
+        <span id="progressText"></span>
+        <span id="progressName"></span>
+      </div>
+      <div class="progress-track" id="progressTrack"></div>
+    </div>
+
+    <div class="section-eyebrow" id="sectionEyebrow"></div>
+    <h2 class="section-title" id="sectionTitle"></h2>
+    <div class="section-rule"></div>
+
+    <div id="itemsWrap"></div>
+    <p class="form-error" id="sectionError" role="alert" hidden>Please rate every statement in this section before continuing.</p>
+
+    <div class="nav-row">
+      <button type="button" class="btn-ghost" id="backBtn" onclick="goBack()">&larr; Back</button>
+      <button type="button" class="btn-primary" id="nextBtn" onclick="goNext()">Next &rarr;</button>
+    </div>
+    <div class="exit-row">
+      <button type="button" class="btn-link" id="exitBtn" onclick="askExit()">Start over</button>
+      <span id="exitConfirm" hidden>Discard your answers and go back to the start?
+        <button type="button" class="btn-link" onclick="restart()">Yes, start over</button>
+        <button type="button" class="btn-link" onclick="cancelExit()">Keep going</button>
+      </span>
+    </div>
+  </div>
+
+  <!-- DONE + REPORT -->
+  <div class="screen" id="screen-done" hidden>
+    <div class="done-head">
+      <div class="done-mark">&#10003;</div>
+      <h1 id="doneTitle"></h1>
+      <p id="doneSummary"></p>
+      <div class="summary-line" id="timeSummary"></div>
+    </div>
+    <div class="actions">
+      <button type="button" class="btn-primary" onclick="saveSingleHtml()">Download report (.html)</button>
+      <button type="button" class="btn-ghost" onclick="saveSingleCsv()">Download data (.csv)</button>
+    </div>
+    <p class="dl-status" id="doneStatus" role="status"></p>
+    <div class="fallback" id="doneFallback" hidden></div>
+    <div class="rep" id="reportBody"></div>
+    <div class="prototype-note" id="doneNote"></div>
+    <div class="nav-row">
+      <span></span>
+      <button type="button" class="btn-primary" onclick="restart()">Start over &rarr;</button>
+    </div>
+  </div>
+
+  <!-- FACILITATOR -->
+  <div class="screen" id="screen-fac" hidden>
+    <div class="start-hero">
+      <h1>Compare reports</h1>
+      <p>Add the data file (.csv) from one person's self-assessment and from each of that person's raters. The report sets the self-assessment against each rater group.</p>
+    </div>
+    <div class="fac-actions">
+      <button type="button" class="btn-primary" onclick="document.getElementById('fileInput').click()">Add data files</button>
+      <button type="button" class="btn-ghost" onclick="loadSample(false)">Sample data: enough responses</button>
+      <button type="button" class="btn-ghost" onclick="loadSample(true)">Sample data: one group too small</button>
+      <input type="file" id="fileInput" accept=".csv,text/csv" multiple hidden>
+    </div>
+    <p class="form-error" id="facError" role="alert" hidden></p>
+    <div id="facLoaded"></div>
+    <div class="fac-controls" id="facControls" hidden></div>
+    <div id="facComments"></div>
+    <div id="facInclude"></div>
+    <div class="actions" id="facActions" hidden>
+      <button type="button" class="btn-primary" onclick="saveFacHtml()">Download comparison (.html)</button>
+      <button type="button" class="btn-ghost" onclick="saveFacCsv()">Download summary (.csv)</button>
+    </div>
+    <p class="dl-status" id="facStatus" role="status"></p>
+    <div class="fallback" id="facFallback" hidden></div>
+    <div class="rep" id="facReport"></div>
+    <div class="nav-row">
+      <button type="button" class="btn-ghost" onclick="closeFacilitator()">&larr; Back</button>
+      <span></span>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const COMPETENCIES = [
+  { name: "Adaptability", items: [
+    ["I adapt my approach to suit the situation and people involved.", "They adapt their approach to suit the situation and people involved."],
+    ["I am willing to compromise to reach an acceptable solution.", "They are willing to compromise to reach an acceptable solution."],
+    ["I accept change and uncertainty.", "They accept change and uncertainty."],
+    ["I thrive under changing conditions.", "They thrive under changing conditions."]
+  ]},
+  { name: "Strategic Vision", items: [
+    ["I have a clear idea of where I want to go.", "They have a clear idea of where they want to go."],
+    ["I find it easy to see a problem from multiple points of view.", "They find it easy to see a problem from multiple points of view."],
+    ["I am able to anticipate potential barriers or obstacles.", "They are able to anticipate potential barriers or obstacles."],
+    ["I see exciting possibilities for the future.", "They see exciting possibilities for the future."],
+    ["I inspire others to see the same exciting future I can see.", "They inspire others to see the same exciting future they can see."]
+  ]},
+  { name: "Effective Communications", items: [
+    ["I am a good listener.", "They are a good listener."],
+    ["I express myself clearly.", "They express themselves clearly."],
+    ["I keep control of my emotions during discussions.", "They keep control of their emotions during discussions."],
+    ["I write clearly.", "They write clearly."],
+    ["I am tactful.", "They are tactful."]
+  ]},
+  { name: "Developing Others", items: [
+    ["I create an environment in which it is ok to experiment and learn.", "They create an environment in which it is ok to experiment and learn."],
+    ["I give constructive feedback.", "They give constructive feedback."],
+    ["I share my knowledge and experience freely.", "They share their knowledge and experience freely."],
+    ["I avoid overreacting to others' mistakes.", "They avoid overreacting to others' mistakes."]
+  ]},
+  { name: "Results Orientation", items: [
+    ["I strive for excellence.", "They strive for excellence."],
+    ["I take action to achieve desired results.", "They take action to achieve desired results."],
+    ["I set challenging, yet achievable goals.", "They set challenging, yet achievable goals."],
+    ["I am able to meet my goals.", "They are able to meet their goals."],
+    ["If I face obstacles in the pursuit of a goal, I persevere.", "If they face obstacles in the pursuit of a goal, they persevere."],
+    ["I have a strong sense of urgency.", "They have a strong sense of urgency."]
+  ]},
+  { name: "Integrity", items: [
+    ["I keep my promises.", "They keep their promises."],
+    ["I make fair decisions.", "They make fair decisions."],
+    ["I role model integrity.", "They role model integrity."],
+    ["My actions match my words.", "Their actions match their words."]
+  ]},
+  { name: "Critical Thinking / Decision Making", items: [
+    ["I analyze problems logically.", "They analyze problems logically."],
+    ["I seek out necessary information before reaching a decision.", "They seek out necessary information before reaching a decision."],
+    ["I make timely decisions.", "They make timely decisions."],
+    ["I consider potential consequences as I reach a decision.", "They consider potential consequences as they reach a decision."]
+  ]},
+  { name: "Professionalism", items: [
+    ["I know how to progress in my career path.", "They know how to progress in their career path."],
+    ["I look for continuing education opportunities.", "They look for continuing education opportunities."],
+    ["I am willing to accept constructive criticism.", "They are willing to accept constructive criticism."],
+    ["I am able to build strong professional relationships.", "They are able to build strong professional relationships."],
+    ["I am able to keep my emotions in check at work.", "They are able to keep their emotions in check at work."]
+  ]},
+  { name: "Inspiring and Involving Others", items: [
+    ["I recognize the contributions of others.", "They recognize the contributions of others."],
+    ["I help others understand the importance of their work to the organization.", "They help others understand the importance of their work to the organization."],
+    ["I involve others in critical team decisions.", "They involve others in critical team decisions."]
+  ]},
+  { name: "Intercultural / Global Intelligence", items: [
+    ["I can work effectively with people whose backgrounds are different from mine.", "They can work effectively with people whose backgrounds are different from theirs."],
+    ["I respect people from differing cultural backgrounds.", "They respect people from differing cultural backgrounds."],
+    ["I respect other people's viewpoints, even when they differ from my own.", "They respect other people's viewpoints, even when they differ from their own."],
+    ["I keep an open mind.", "They keep an open mind."],
+    ["I am able to temporarily adjust to different cultural expectations or norms.", "They are able to temporarily adjust to different cultural expectations or norms."]
+  ]},
+  { name: "Interpersonal Relationships", items: [
+    ["I can relate to others in a warm manner.", "They can relate to others in a warm manner."],
+    ["I spend time and energy building relationships.", "They spend time and energy building relationships."],
+    ["I can collaborate effectively with others.", "They can collaborate effectively with others."],
+    ["I can handle conflict diplomatically.", "They can handle conflict diplomatically."],
+    ["I can reconcile the agendas of multiple stakeholders.", "They can reconcile the agendas of multiple stakeholders."]
+  ]},
+  { name: "Leading Culture Change", items: [
+    ["In general, I am comfortable with change.", "In general, they are comfortable with change."],
+    ["I avoid sticking to “old ways of doing things.”", "They avoid sticking to “old ways of doing things.”"],
+    ["I am sensitive to my followers' emotional needs during change.", "They are sensitive to their followers' emotional needs during change."],
+    ["I support my followers during times of change.", "They support their followers during times of change."]
+  ]}
+];
+
+const SCALE = [
+  {n:1, t:"Strongly Disagree"},
+  {n:2, t:"Disagree"},
+  {n:3, t:"Neutral"},
+  {n:4, t:"Agree"},
+  {n:5, t:"Strongly Agree"}
+];
+const GROUPS = [['peer','Peers'], ['manager','Managers'], ['direct report','Direct reports'], ['other','Other']];
+const REL_LABEL = {'peer':'Peer', 'manager':'Manager', 'direct report':'Direct report', 'other':'Other'};
+const MIN_GROUP = 3;          // minimum raters per group before a group is shown
+const EXEMPT_GROUP = 'manager'; // a manager is shown even if only one person responds
+
+const $ = id => document.getElementById(id);
+const mean = a => a.reduce((x, y) => x + y, 0) / a.length;
+const f1 = n => (n === null || n === undefined) ? '—' : n.toFixed(1);
+const fgap = n => (n === null || n === undefined) ? '—' : (n > 0.049 ? '+' : (n < -0.049 ? '−' : '')) + Math.abs(n).toFixed(1);
+const pct = v => ((v - 1) * 25).toFixed(1);
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+}
+function today() { return new Date().toLocaleDateString('en-US', {year:'numeric', month:'long', day:'numeric'}); }
+function norm(s) { return String(s || '').trim().toLowerCase().replace(/\s+/g, ' '); }
+function slug(s) { return String(s || 'report').trim().replace(/[^\w\-]+/g, '_').replace(/^_+|_+$/g, '') || 'report'; }
+const TOTAL_ITEMS = COMPETENCIES.reduce((a, c) => a + c.items.length, 0);
+
+/* ---------- report styles (shared by the page and the downloaded file) ---------- */
+const REPORT_CSS = `
+.rep{font-family:var(--font-body);color:var(--ink);line-height:1.5}
+.rep h1,.rep h2,.rep h3{font-family:var(--font-display);font-weight:600;letter-spacing:-0.01em;margin:0;color:var(--navy)}
+.rep h2{padding-bottom:6px;border-bottom:1px solid var(--line)}
+.rep h1{font-size:28px;line-height:1.15}
+.rep h2{font-size:20px;margin:36px 0 12px}
+.rep h3{font-size:16px;margin:18px 0 6px}
+.rep p{margin:0}
+.rep-kicker{font-size:12px;letter-spacing:.06em;text-transform:uppercase;font-weight:600;color:var(--brand);margin:0 0 8px!important}
+.rep-sub{color:var(--ink-soft);font-size:14px;margin-top:8px!important}
+.rep .mk-allc{background:var(--navy);border:2px solid var(--paper-raised);z-index:2}
+.rep-note{font-size:12.5px;color:var(--stone);margin-top:10px!important}
+.rep .table-wrap{overflow-x:auto}
+.rep table{width:100%;border-collapse:collapse;font-size:14px}
+.rep th,.rep td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
+.rep thead th{font-size:12px;font-weight:600;color:var(--navy);white-space:nowrap;border-bottom:2px solid var(--navy)}
+.rep td.num,.rep th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.rep .muted{color:var(--stone);font-size:12px}
+.rep .bar{height:8px;background:var(--line);border-radius:4px;min-width:90px}
+.rep .bar span{display:block;height:100%;background:var(--navy);border-radius:4px}
+.rep details{border-bottom:1px solid var(--line);padding:6px 0}
+.rep summary{cursor:pointer;font-weight:500;padding:6px 0}
+.rep ul.comments{margin:6px 0 14px;padding-left:18px}
+.rep ul.comments li{margin:5px 0;font-size:14px}
+.rep .who{font-size:12px;font-weight:600;color:var(--ink-soft);margin:8px 0 2px}
+.rep .diff-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+.rep .diff-grid ul{margin:6px 0 0;padding-left:18px;font-size:14px}
+.rep .diff-grid li{margin:4px 0}
+.rep .legend{display:flex;flex-wrap:wrap;gap:16px;font-size:13px;color:var(--ink-soft);margin:0 0 6px}
+.rep .legend span{display:inline-flex;align-items:center;gap:6px}
+.rep .dot{display:inline-block;width:14px;height:14px;border-radius:50%}
+.rep .dot.self{background:var(--gold);border:2px solid var(--navy)}
+.rep .dot.raters{background:var(--navy)}
+.rep .plot-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.5fr);gap:12px;align-items:center;padding:6px 0;border-top:1px solid var(--line);font-size:14px}
+.rep .plot-row.axis{border-top:none;padding:0}
+.rep .plot-track{position:relative;height:38px;margin:0 10px}
+.rep .plot-track.axis{height:18px}
+.rep .grid{position:absolute;top:3px;bottom:3px;width:1px;background:var(--line);opacity:.55}
+.rep .tick{position:absolute;top:0;transform:translateX(-50%);font-size:11px;color:var(--stone)}
+.rep .mk{position:absolute;top:calc(50% + var(--dy,0px));width:14px;height:14px;transform:translate(-50%,-50%);border-radius:50%}
+.rep .mk-self{background:var(--gold);border:2px solid var(--navy);z-index:5}
+.rep .mk-manager{background:var(--brand);border-radius:2px;transform:translate(-50%,-50%) rotate(45deg);width:12px;height:12px;z-index:4}
+.rep .mk-peer{background:var(--navy);border-radius:2px;z-index:3}
+.rep .mk-direct-report{background:var(--teal);border-radius:0;clip-path:polygon(50% 0,100% 100%,0 100%);width:16px;height:15px;z-index:3}
+.rep .mk-other{background:var(--stone);border-radius:0;clip-path:polygon(35% 0,65% 0,65% 35%,100% 35%,100% 65%,65% 65%,65% 100%,35% 100%,35% 65%,0 65%,0 35%,35% 35%);width:16px;height:16px;z-index:3}
+.rep .mk-all{background:var(--ink);border-radius:2px;width:4px;height:22px;z-index:2}
+.rep .seg{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 10px}
+.rep .seg button{padding:6px 12px;font-size:13px;font-weight:600;border:1px solid var(--line);background:var(--paper-raised);color:var(--ink-soft);border-radius:999px}
+.rep .seg button[aria-pressed="true"]{background:var(--brand);border-color:var(--brand);color:var(--on-brand,#fff)}
+.rep .seg-label{font-size:12px;color:var(--ink-soft);margin:0 0 6px!important}
+.rep .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin:22px 0 4px}
+.rep .stat{background:var(--paper-raised);border:1px solid var(--line);border-radius:4px;padding:12px 14px}
+.rep .stat .v{font-family:var(--font-display);font-size:28px;font-weight:600;line-height:1.1;color:var(--navy)}
+.rep .stat .l{font-size:12px;color:var(--ink-soft);margin-top:4px}
+.rep .stat.self{border-top:4px solid var(--gold)}
+.rep .stat.raters{border-top:4px solid var(--navy)}
+.rep .stat.mgr{border-top:4px solid var(--brand)}
+.rep .stat.n{border-top:4px solid var(--line)}
+.rep td.cb{min-width:74px}
+.rep .cb .n1{font-variant-numeric:tabular-nums;text-align:right}
+.rep .cb .mb{height:4px;width:64px;margin:4px 0 0 auto;background:var(--line);border-radius:2px}
+.rep .cb .mb i{display:block;height:100%;border-radius:2px;background:var(--navy)}
+.rep .cb.self .mb i{background:var(--gold)}
+.rep .cb.mgr .mb i{background:var(--brand)}
+.rep .lg{position:static;display:inline-block;transform:none;vertical-align:middle;flex:none}
+.rep .lg.mk-manager{transform:rotate(45deg);margin:0 2px}
+.rep .quads{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;margin:8px 0 4px}
+.rep .quads h3{margin:0 0 4px}
+.rep svg.quad{width:100%;height:auto;display:block}
+.rep svg.quad text{font-family:var(--font-body)}
+.rep .qkey{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:2px 16px;font-size:13px;color:var(--ink-soft);margin:6px 0 0;padding:0;list-style:none}
+.rep .qkey b{display:inline-block;min-width:22px;color:var(--navy)}
+.rep .mk.self{background:var(--gold);border:2px solid var(--navy);z-index:2}
+.rep .mk.raters{background:var(--navy);border:2px solid var(--paper-raised);z-index:1}
+.rep .gapline{position:absolute;top:50%;height:4px;border-radius:2px;background:var(--stone-light);transform:translateY(-50%)}
+@media (max-width:560px){.rep .plot-row{grid-template-columns:1fr;gap:2px}.rep .plot-row.axis>div:first-child{display:none}}
+`;
+const LIGHT_TOKENS = ':root{--brand:#5E3A99;--brand-dark:#47287A;--brand-tint:#EEE8F7;--navy:#0C2577;--lime:#9ECA27;--gold:#E3A92B;--teal:#1F8A9B;--stone:#5F6A88;--stone-light:#9AA4C0;--paper:#FFFFFF;--paper-raised:#FFFFFF;--ink:#1B2540;--ink-soft:#46517A;--line:#D5DCEE;--font-display:"Maven Pro",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;--font-body:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}body{margin:0;background:#fff;color:#1B2540}.rep-page{max-width:900px;margin:0 auto;padding:32px 24px}@media print{.rep-page{padding:0}.rep h2{break-after:avoid}.rep details{break-inside:avoid}}';
+(function () {
+  const st = document.createElement('style');
+  st.textContent = REPORT_CSS;
+  document.head.appendChild(st);
+})();
+
+function docHtml(title, body) {
+  return '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>' + esc(title) + '</title><style>' + LIGHT_TOKENS + REPORT_CSS + '</style></head><body><div class="rep-page rep">' + body.replace(/<details>/g, '<details open>') + '</div></body></html>';
+}
+
+/* ---------- state ---------- */
+let role = 'self', relationship = 'peer', subject = '';
+let current = 0, startTime = null;
+let answers = [], comments = [], importance = [];
+
+function initState() {
+  answers = COMPETENCIES.map(c => c.items.map(() => null));
+  comments = COMPETENCIES.map(() => '');
+  importance = COMPETENCIES.map(() => null);
+}
+initState();
+const IMP_SCALE = [{n:1,t:'Not important'},{n:2,t:'Slightly important'},{n:3,t:'Moderately important'},{n:4,t:'Very important'},{n:5,t:'Critical'}];
+const IMPORTANT_MIN = 4, LOW_RATING = 3.5;
+const needsImportance = () => role === 'self' || (role === 'rater' && relationship === 'manager');
+
+function showScreen(id) {
+  ['start', 'survey', 'done', 'fac'].forEach(s => { $('screen-' + s).hidden = (s !== id); });
+  $('app').classList.toggle('wide', id === 'done' || id === 'fac');
+  $('modeLabel').textContent = id === 'fac' ? 'Facilitator' : (id === 'start' ? '' : (role === 'self' ? 'Self-Assessment' : 'Rater Feedback'));
+  window.scrollTo(0, 0);
+}
+
+function setRole(r) {
+  role = r;
+  $('roleSelf').classList.toggle('selected', r === 'self');
+  $('roleRater').classList.toggle('selected', r === 'rater');
+  $('nameLabel').textContent = r === 'self' ? 'Your name' : "Name of the person you're rating";
+  $('relField').hidden = (r === 'self');
+  $('startError').hidden = true;
+}
+
+function buildProgressTrack() {
+  const track = $('progressTrack');
+  track.innerHTML = '';
+  COMPETENCIES.forEach((c, i) => {
+    const seg = document.createElement('div');
+    seg.className = 'progress-seg';
+    if (i < current) seg.classList.add('done');
+    if (i === current) seg.classList.add('current');
+    track.appendChild(seg);
+  });
+}
+
+function beginSurvey() {
+  const name = $('nameInput').value.trim();
+  if (!name) {
+    $('startError').textContent = role === 'self' ? 'Please enter your name so the report can carry it.' : "Please enter the name of the person you're rating so the report can be matched to them.";
+    $('startError').hidden = false;
+    return;
+  }
+  $('startError').hidden = true;
+  subject = name;
+  relationship = role === 'rater' ? $('relInput').value : '';
+  initState();
+  current = 0;
+  startTime = Date.now();
+  showScreen('survey');
+  renderSection();
+}
+
+function renderSection() {
+  const comp = COMPETENCIES[current];
+  $('progressText').textContent = 'Section ' + (current + 1) + ' of ' + COMPETENCIES.length;
+  $('progressName').textContent = comp.name;
+  $('sectionEyebrow').textContent = 'Competency ' + (current + 1) + ' of ' + COMPETENCIES.length;
+  $('sectionTitle').textContent = comp.name;
+  $('sectionError').hidden = true;
+  buildProgressTrack();
+
+  const wrap = $('itemsWrap');
+  wrap.innerHTML = '';
+  if (needsImportance()) {
+    const q = role === 'self' ? 'How important is ' + comp.name + ' for success in your current role?' : 'How important is ' + comp.name + ' for success in ' + subject + '’s role?';
+    let ih = '<div class="item-prompt">' + esc(q) + '</div><div class="scale">';
+    IMP_SCALE.forEach(opt => {
+      ih += '<div class="scale-opt"><input type="radio" name="i' + current + '" id="i' + current + '_' + opt.n + '" value="' + opt.n + '"' + (importance[current] === opt.n ? ' checked' : '') + '>' +
+        '<label for="i' + current + '_' + opt.n + '"><span class="num">' + opt.n + '</span><span class="txt">' + opt.t + '</span></label></div>';
+    });
+    const imp = document.createElement('div');
+    imp.className = 'item importance';
+    imp.id = 'item-imp';
+    imp.innerHTML = ih + '</div>';
+    wrap.appendChild(imp);
+  }
+  comp.items.forEach((pair, idx) => {
+    const text = role === 'self' ? pair[0] : pair[1];
+    const item = document.createElement('div');
+    item.className = 'item';
+    item.id = 'item-' + idx;
+    const scaleId = 's' + current + '_' + idx;
+    const sel = answers[current][idx];
+    let scaleHtml = '<div class="scale">';
+    SCALE.forEach(opt => {
+      scaleHtml += '<div class="scale-opt"><input type="radio" name="' + scaleId + '" id="' + scaleId + '_' + opt.n + '" value="' + opt.n + '"' + (sel === opt.n ? ' checked' : '') + '>' +
+        '<label for="' + scaleId + '_' + opt.n + '"><span class="num">' + opt.n + '</span><span class="txt">' + opt.t + '</span></label></div>';
+    });
+    scaleHtml += '</div>';
+    item.innerHTML = '<div class="item-prompt">' + text + '</div>' + scaleHtml;
+    wrap.appendChild(item);
+  });
+
+  const comment = document.createElement('div');
+  comment.className = 'comment-field';
+  comment.innerHTML = '<label for="commentBox">Anything you’d like to add? (optional)</label><textarea id="commentBox" maxlength="2000" placeholder="Optional comment">' + esc(comments[current]) + '</textarea>';
+  wrap.appendChild(comment);
+
+  $('backBtn').disabled = current === 0;
+  $('nextBtn').textContent = current === COMPETENCIES.length - 1 ? 'Finish →' : 'Next →';
+}
+
+$('itemsWrap').addEventListener('change', e => {
+  const t = e.target;
+  if (t && t.matches && t.matches('input[type=radio]')) {
+    if (t.name.charAt(0) === 'i') { importance[Number(t.name.slice(1))] = Number(t.value); }
+    else {
+      const parts = t.name.slice(1).split('_').map(Number);
+      answers[parts[0]][parts[1]] = Number(t.value);
+    }
+    const it = t.closest('.item');
+    if (it) it.classList.remove('missing');
+    if (!document.querySelector('.item.missing')) $('sectionError').hidden = true;
+  }
+});
+$('itemsWrap').addEventListener('input', e => {
+  if (e.target && e.target.id === 'commentBox') comments[current] = e.target.value;
+});
+
+function goNext() {
+  const off = needsImportance() ? 1 : 0;
+  const els = Array.prototype.slice.call(document.querySelectorAll('#itemsWrap .item'));
+  let firstBad = null;
+  els.forEach((el, i) => {
+    const bad = (off && i === 0) ? importance[current] === null : answers[current][i - off] === null;
+    el.classList.toggle('missing', bad);
+    if (bad && !firstBad) firstBad = el;
+  });
+  if (firstBad) {
+    $('sectionError').hidden = false;
+    if (firstBad.scrollIntoView) firstBad.scrollIntoView({block: 'center'});
+    return;
+  }
+  if (current < COMPETENCIES.length - 1) {
+    current++;
+    renderSection();
+    window.scrollTo(0, 0);
+  } else {
+    finishSurvey();
+  }
+}
+function goBack() {
+  if (current > 0) { current--; renderSection(); window.scrollTo(0, 0); }
+}
+
+/* ---------- single-respondent report ---------- */
+function currentResp() {
+  return {source: role, relationship: relationship, student: subject, ratings: answers, comments: comments, importance: needsImportance() ? importance.slice() : null};
+}
+
+function singleReportBody(resp) {
+  const isSelf = resp.source === 'self';
+  const hasImp = !!(resp.importance && resp.importance.some(v => v !== null));
+  const rows = COMPETENCIES.map((c, ci) => ({name: c.name, imp: hasImp ? resp.importance[ci] : null, avg: mean(resp.ratings[ci]), items: c.items.map((p, ii) => ({text: isSelf ? p[0] : p[1], score: resp.ratings[ci][ii]}))}));
+  const overall = mean(rows.map(r => r.avg));
+  let h = '<header><p class="rep-kicker">MSLIN · Leadership Development 360°</p>' +
+    '<h1>' + (isSelf ? 'Self-Assessment Report' : 'Rater Feedback Report') + '</h1>' +
+    '<p class="rep-sub">' + (isSelf ? esc(resp.student) : 'Feedback on ' + esc(resp.student) + ' · ' + esc(REL_LABEL[resp.relationship] || resp.relationship)) + ' · ' + today() + '</p>' +
+    '<p class="rep-sub">Overall average: <strong>' + f1(overall) + '</strong> on a scale of 1 to 5</p></header>';
+
+  h += '<h2>Competency averages</h2><div class="table-wrap"><table><thead><tr><th>Competency</th><th class="num">Average</th>' + (hasImp ? '<th class="num">Importance</th>' : '') + '<th>&nbsp;</th></tr></thead><tbody>';
+  rows.forEach(r => {
+    h += '<tr><th scope="row" style="font-weight:500">' + esc(r.name) + '</th><td class="num">' + f1(r.avg) + '</td>' + (hasImp ? '<td class="num">' + (r.imp === null ? '—' : r.imp) + '</td>' : '') + '<td><div class="bar"><span style="width:' + (r.avg / 5 * 100).toFixed(0) + '%"></span></div></td></tr>';
+  });
+  h += '</tbody></table></div><p class="rep-note">1 = Strongly Disagree, 3 = Neutral, 5 = Strongly Agree.' + (hasImp ? ' Importance: 1 = Not important, 5 = Critical.' : '') + '</p>';
+
+  h += '<h2>Item scores</h2>';
+  rows.forEach(r => {
+    h += '<details><summary>' + esc(r.name) + ' · ' + f1(r.avg) + '</summary><div class="table-wrap"><table><tbody>';
+    r.items.forEach(it => { h += '<tr><td>' + esc(it.text) + '</td><td class="num">' + it.score + '</td></tr>'; });
+    h += '</tbody></table></div></details>';
+  });
+
+  h += '<h2>Comments</h2>';
+  let any = false;
+  COMPETENCIES.forEach((c, ci) => {
+    const t = (resp.comments[ci] || '').trim();
+    if (t) { any = true; h += '<h3>' + esc(c.name) + '</h3><ul class="comments"><li>' + esc(t) + '</li></ul>'; }
+  });
+  if (!any) h += '<p class="muted">No comments were entered.</p>';
+  return h;
+}
+
+function finishSurvey() {
+  const seconds = Math.round((Date.now() - startTime) / 1000);
+  const resp = currentResp();
+  const isSelf = role === 'self';
+  $('doneTitle').textContent = isSelf ? 'Your self-assessment report is ready' : 'Your feedback report is ready';
+  $('doneSummary').textContent = isSelf
+    ? 'Thanks, ' + subject + '. Below is your report. Download the data file if you want it included in a comparison with your raters’ feedback.'
+    : 'Thanks. Below is the report of your feedback on ' + subject + '. Download the data file so the facilitator can include it in the comparison.';
+  $('timeSummary').textContent = 'Time to complete: ' + Math.floor(seconds / 60) + 'm ' + (seconds % 60) + 's · ' + COMPETENCIES.length + ' competencies, ' + TOTAL_ITEMS + ' items';
+  $('reportBody').innerHTML = singleReportBody(resp);
+  $('doneNote').textContent = isSelf
+    ? 'Prototype note: in the real tool, the self-assessment report is generated and delivered the same way, and the data goes straight to the database instead of to a downloaded file.'
+    : 'Prototype note: in the real tool, raters would not see this report or any results. It exists here so you can check what the facilitator will receive. The comment text is stored without the rater’s name.';
+  $('doneStatus').textContent = '';
+  $('doneFallback').hidden = true;
+  showScreen('done');
+}
+
+function askExit() { $('exitBtn').hidden = true; $('exitConfirm').hidden = false; }
+function cancelExit() { $('exitConfirm').hidden = true; $('exitBtn').hidden = false; }
+
+function restart() {
+  cancelExit();
+  initState();
+  $('nameInput').value = '';
+  setRole('self');
+  showScreen('start');
+}
+
+/* ---------- CSV ---------- */
+function cell(v) { return '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"'; }
+function safeText(s) { return /^[=+\-@\t\r]/.test(s) ? "'" + s : s; }
+const unsafeText = s => String(s || '').replace(/^'([=+\-@\t\r])/, '$1');
+
+function buildCsv(resp) {
+  const isSelf = resp.source === 'self';
+  const lines = [['type','source','relationship','person','competency_no','competency','item_no','statement','score','comment'].map(cell).join(',')];
+  COMPETENCIES.forEach((c, ci) => {
+    c.items.forEach((p, ii) => {
+      lines.push(['rating', resp.source, resp.relationship, safeText(resp.student), ci + 1, c.name, ii + 1, safeText(isSelf ? p[0] : p[1]), resp.ratings[ci][ii], ''].map(cell).join(','));
+    });
+    if (resp.importance && resp.importance[ci] != null) lines.push(['importance', resp.source, resp.relationship, safeText(resp.student), ci + 1, c.name, '', '', resp.importance[ci], ''].map(cell).join(','));
+    const t = (resp.comments[ci] || '').trim();
+    if (t) lines.push(['comment', resp.source, resp.relationship, safeText(resp.student), ci + 1, c.name, '', '', '', safeText(t)].map(cell).join(','));
+  });
+  return '﻿' + lines.join('\r\n') + '\r\n';
+}
+
+function parseCsv(text) {
+  const rows = []; let row = [], cur = '', inQ = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (inQ) {
+      if (ch === '"') { if (text[i + 1] === '"') { cur += '"'; i++; } else inQ = false; }
+      else cur += ch;
+    } else if (ch === '"') inQ = true;
+    else if (ch === ',') { row.push(cur); cur = ''; }
+    else if (ch === '\n' || ch === '\r') {
+      if (ch === '\r' && text[i + 1] === '\n') i++;
+      row.push(cur); cur = ''; rows.push(row); row = [];
+    } else cur += ch;
+  }
+  if (cur !== '' || row.length) { row.push(cur); rows.push(row); }
+  return rows.filter(r => r.some(c => c !== ''));
+}
+
+function parseResp(text) {
+  const rows = parseCsv(String(text).replace(/^﻿/, ''));
+  if (rows.length < 2) return {error: 'This file is empty.'};
+  const h = rows[0].map(s => s.trim().toLowerCase());
+  const col = n => h.indexOf(n);
+  const pc = col('person') >= 0 ? 'person' : 'student';
+  const need = ['type','source','relationship',pc,'competency_no','item_no','score','comment'];
+  if (need.some(n => col(n) < 0)) return {error: 'This is not a data file from this tool.'};
+  const ratings = COMPETENCIES.map(c => c.items.map(() => null));
+  const cmts = COMPETENCIES.map(() => '');
+  const imps = COMPETENCIES.map(() => null);
+  let source = '', rel = '', student = '';
+  rows.slice(1).forEach(r => {
+    if (!source) {
+      source = (r[col('source')] || '').trim().toLowerCase();
+      rel = (r[col('relationship')] || '').trim().toLowerCase();
+      student = unsafeText(r[col(pc)]).trim();
+    }
+    const type = (r[col('type')] || '').trim().toLowerCase();
+    const ci = parseInt(r[col('competency_no')], 10) - 1;
+    if (!COMPETENCIES[ci]) return;
+    if (type === 'rating') {
+      const ii = parseInt(r[col('item_no')], 10) - 1;
+      const s = parseInt(r[col('score')], 10);
+      if (COMPETENCIES[ci].items[ii] !== undefined && s >= 1 && s <= 5) ratings[ci][ii] = s;
+    } else if (type === 'importance') {
+      const v = parseInt(r[col('score')], 10);
+      if (v >= 1 && v <= 5) imps[ci] = v;
+    } else if (type === 'comment') {
+      cmts[ci] = unsafeText(r[col('comment')]);
+    }
+  });
+  if (source !== 'self' && source !== 'rater') return {error: 'Could not tell whether this is a self-assessment or a rater file.'};
+  if (!student) return {error: 'The person’s name is missing.'};
+  if (ratings.some(a => a.some(v => v === null))) return {error: 'Some ratings are missing, so this file was skipped.'};
+  return {source: source, relationship: source === 'self' ? '' : (['peer','manager','direct report','other'].indexOf(rel) >= 0 ? rel : 'other'), student: student, ratings: ratings, comments: cmts, importance: imps.some(v => v !== null) ? imps : null};
+}
+
+/* ---------- saving files ---------- */
+let downloadsCap;
+async function getDownloads() {
+  if (downloadsCap !== undefined) return downloadsCap;
+  try { downloadsCap = (window.claude && window.claude.use) ? await window.claude.use('downloads') : null; }
+  catch (e) { downloadsCap = null; }
+  return downloadsCap;
+}
+getDownloads();
+
+async function saveFile(filename, text, statusEl, fbEl) {
+  statusEl.textContent = '';
+  fbEl.hidden = true; fbEl.innerHTML = '';
+  const d = await getDownloads();
+  if (d) {
+    try {
+      await d.save({filename: filename, data: text});
+      statusEl.textContent = 'Saved ' + filename + '.';
+      return;
+    } catch (e) {
+      if (e && e.code === 'declined') { statusEl.textContent = 'Save cancelled.'; return; }
+    }
+  }
+  if (!d && !window.claude) {
+    // opened as an ordinary file in a browser: use a normal download
+    try {
+      const url = URL.createObjectURL(new Blob([text], {type: /\.csv$/i.test(filename) ? 'text/csv;charset=utf-8' : 'text/html;charset=utf-8'}));
+      const a = document.createElement('a');
+      a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 4000);
+      statusEl.textContent = 'Downloaded ' + filename + '. Check your Downloads folder.';
+      return;
+    } catch (e) { /* fall through to copy-text */ }
+  }
+  fbEl.hidden = false;
+  fbEl.innerHTML = '<p>Downloads are not available in this view. Copy the text below and paste it into a new file named <strong>' + esc(filename) + '</strong>.</p>' +
+    '<textarea readonly aria-label="File contents">' + esc(text) + '</textarea><button type="button" class="btn-ghost" onclick="copyFallback(this)">Copy text</button>';
+}
+function copyFallback(btn) {
+  const ta = btn.previousElementSibling;
+  ta.focus(); ta.select();
+  let ok = false;
+  try { ok = document.execCommand('copy'); } catch (e) {}
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(ta.value).then(() => { btn.textContent = 'Copied'; }).catch(() => { btn.textContent = ok ? 'Copied' : 'Press and hold to copy'; });
+  } else btn.textContent = ok ? 'Copied' : 'Press and hold to copy';
+}
+
+function saveSingleHtml() {
+  const r = currentResp();
+  const title = (r.source === 'self' ? 'Self-Assessment Report' : 'Rater Feedback Report') + ' – ' + r.student;
+  saveFile('360-' + (r.source === 'self' ? 'self' : 'rater-' + slug(r.relationship)) + '-report-' + slug(r.student) + '.html', docHtml(title, singleReportBody(r)), $('doneStatus'), $('doneFallback'));
+}
+function saveSingleCsv() {
+  const r = currentResp();
+  saveFile('360-' + (r.source === 'self' ? 'self' : 'rater-' + slug(r.relationship)) + '-data-' + slug(r.student) + '.csv', buildCsv(r), $('doneStatus'), $('doneFallback'));
+}
+
+/* ---------- facilitator: comparison ---------- */
+let loaded = [], uid = 0, selStudent = '';
+const fopts = {remedy: 'merge', comments: true};
+let cmtState = {}, cmtEditing = null, lastWarn = '';
+let cmpView = 'allc';
+const incl = {summary: true, diffs: true, groups: true, quads: true, mgrtable: true, items: true, comments: true, charts: {allc: true, manager: true}};
+function chartOpts(m) {
+  const o = [{key: 'allc', label: 'All raters', n: m.pool.length, get: r => r.all}];
+  m.cols.forEach(c => o.push({key: c.key, label: c.key === 'manager' ? 'Manager' : c.label, n: c.n, get: r => r.groups[c.key]}));
+  return o;
+}
+function hasImpData(m) { return m.rows.some(r => r.mgrImp !== null || r.selfImp !== null); }
+let facModel = null, facStudentName = '';
+
+function openFacilitator() { showScreen('fac'); renderFac(); }
+function closeFacilitator() { showScreen('start'); }
+
+$('fileInput').addEventListener('change', async e => {
+  const files = Array.prototype.slice.call(e.target.files || []);
+  e.target.value = '';
+  const msgs = [];
+  for (const f of files) {
+    try { addLoaded(f.name, await f.text(), msgs); }
+    catch (err) { msgs.push(f.name + ': could not be read.'); }
+  }
+  setFacError(msgs);
+  renderFac();
+});
+
+function addLoaded(name, text, msgs) {
+  if (loaded.some(l => l.text === text)) { msgs.push(name + ': this file was already added.'); return; }
+  const res = parseResp(text);
+  if (res.error) { msgs.push(name + ': ' + res.error); return; }
+  res.fileId = ++uid;
+  loaded.push({id: res.fileId, name: name, text: text, resp: res});
+}
+function setFacError(msgs) {
+  const el = $('facError');
+  if (msgs && msgs.length) { el.innerHTML = msgs.map(esc).join('<br>'); el.hidden = false; } else el.hidden = true;
+}
+function removeLoaded(id) { loaded = loaded.filter(l => l.id !== id); renderFac(); }
+
+function mulberry32(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function loadSample(small) {
+  loaded = []; cmtState = {}; cmtEditing = null;
+  const student = 'Sample Person (example data)';
+  const bias = [-0.2, -0.9, 0.1, 0.3, -0.4, 0.5, -0.3, 0.2, 0.4, -0.1, 0.3, -0.6];
+  const cmtPool = [
+    '(Sample) Listens carefully in meetings and follows up on what was said.',
+    '(Sample) Sometimes moves to a decision before everyone has been heard.',
+    '(Sample) Gives credit to the team publicly and often.',
+    '(Sample) Would benefit from sharing the long-term picture more often.',
+    '(Sample) Stays calm when plans change at the last minute.'
+  ];
+  const SELF_IMP = [4,4,5,5,4,4,4,5,3,3,4,4], MGR_IMP = [4,5,4,5,4,5,4,4,3,2,2,3];
+  const make = (source, rel, seed, base, useBias, special) => {
+    const rnd = mulberry32(seed);
+    const ratings = COMPETENCIES.map((c, ci) => c.items.map(() => Math.max(1, Math.min(5, Math.round(base + (useBias ? bias[ci] : 0) + (rnd() - 0.5) * 1.6)))));
+    const cm = COMPETENCIES.map(() => '');
+    cm[Math.floor(rnd() * 12)] = cmtPool[Math.floor(rnd() * cmtPool.length)];
+    cm[Math.floor(rnd() * 12)] = cmtPool[Math.floor(rnd() * cmtPool.length)];
+    if (special) cm[7] = special;
+    return {source: source, relationship: rel, student: student, ratings: ratings, comments: cm, importance: source === 'self' ? SELF_IMP : (rel === 'manager' ? MGR_IMP : null)};
+  };
+  const set = [
+    make('self', '', 11, 4.3, false),
+    make('rater', 'peer', 21, 3.9, true), make('rater', 'peer', 22, 3.8, true),
+    make('rater', 'peer', 23, 3.7, true, '(Sample) As the only person on the Tampa team who reports to them, I can say they always follow through.'),
+    make('rater', 'manager', 31, 3.6, true),
+    make('rater', 'direct report', 41, 4.1, true), make('rater', 'direct report', 42, 3.9, true)
+  ];
+  if (!small) set.push(make('rater', 'direct report', 43, 4.0, true));
+  const msgs = [];
+  set.forEach((r, i) => addLoaded('sample-' + (i + 1) + '.csv', buildCsv(r), msgs));
+  setFacError(msgs);
+  selStudent = norm(student);
+  renderFac();
+}
+
+function effComment(resp, ci) {
+  const raw = (resp.comments[ci] || '').trim();
+  if (!raw) return null;
+  const st = cmtState[resp.fileId + ':' + ci];
+  if (st && st.include === false) return null;
+  const t = (st && st.text != null) ? st.text.trim() : raw;
+  return t || null;
+}
+
+function reviewHtml(self, raters) {
+  let h = '<details open class="review"><summary>Review comments before sharing</summary>' +
+    '<p class="hint">Untick or edit any comment that could point to a person. Your changes apply to this report and its downloads. The original data files are not changed.</p>';
+  let any = false;
+  COMPETENCIES.forEach((c, ci) => {
+    const items = [];
+    const add = (resp, who) => {
+      const raw = (resp.comments[ci] || '').trim();
+      if (raw) items.push({key: resp.fileId + ':' + ci, raw: raw, who: who});
+    };
+    add(self, 'Self');
+    raters.map(r => ({r: r, t: (r.comments[ci] || '').trim()})).filter(x => x.t).sort((x, y) => x.t.localeCompare(y.t)).forEach(x => add(x.r, ''));
+    if (!items.length) return;
+    any = true;
+    h += '<div class="rv-comp">' + esc(c.name) + '</div>';
+    items.forEach(it => {
+      const st = cmtState[it.key] || {include: true, text: null};
+      const edited = st.text != null;
+      const shown = edited ? st.text : it.raw;
+      const k = esc(it.key);
+      if (cmtEditing === it.key) {
+        h += '<div class="rv-item"><span></span><div class="rv-edit"><textarea data-key="' + k + '" maxlength="2000" aria-label="Edit comment">' + esc(shown) + '</textarea>' +
+          '<div class="rv-actions"><button type="button" class="btn-primary" data-act="save" data-key="' + k + '">Save</button>' +
+          '<button type="button" class="btn-ghost" data-act="cancel" data-key="' + k + '">Cancel</button>' +
+          '<button type="button" class="btn-link" data-act="reset" data-key="' + k + '">Use original</button></div></div><span></span></div>';
+      } else {
+        h += '<div class="rv-item' + (st.include === false ? ' off' : '') + '"><input type="checkbox" aria-label="Include this comment" data-act="inc" data-key="' + k + '"' + (st.include === false ? '' : ' checked') + '>' +
+          '<div class="rv-text">' + (it.who ? '<span class="rv-tag">' + it.who + ' · </span>' : '') + esc(shown) + (edited ? ' <span class="rv-tag">(edited)</span>' : '') + '</div>' +
+          '<button type="button" class="btn-link" data-act="edit" data-key="' + k + '">Edit</button></div>';
+      }
+    });
+  });
+  if (!any) h += '<p class="muted">No comments were entered.</p>';
+  return h + '</details>';
+}
+
+$('facComments').addEventListener('click', e => {
+  const b = e.target.closest ? e.target.closest('button[data-act]') : null;
+  if (!b) return;
+  const k = b.getAttribute('data-key'), act = b.getAttribute('data-act');
+  if (act === 'edit') { cmtEditing = k; renderFac(); }
+  else if (act === 'cancel') { cmtEditing = null; renderFac(); }
+  else if (act === 'reset') { if (cmtState[k]) cmtState[k].text = null; cmtEditing = null; renderFac(); }
+  else if (act === 'save') {
+    const ta = $('facComments').querySelector('textarea[data-key="' + k + '"]');
+    const st = cmtState[k] = cmtState[k] || {include: true, text: null};
+    st.text = ta ? ta.value : null;
+    cmtEditing = null; renderFac();
+  }
+});
+$('facComments').addEventListener('change', e => {
+  const c = e.target;
+  if (c && c.matches && c.matches('input[data-act="inc"]')) {
+    const k = c.getAttribute('data-key');
+    const st = cmtState[k] = cmtState[k] || {include: true, text: null};
+    st.include = c.checked;
+    const row = c.closest('.rv-item');
+    if (row) row.classList.toggle('off', !c.checked);
+    if (facModel) $('facReport').innerHTML = lastWarn + comparisonBody(facModel);
+  }
+});
+
+function includeHtml(m) {
+  const items = [['summary', 'Summary numbers'], ['diffs', 'Largest differences'], ['groups', 'Averages by group table']];
+  if (m.mgrCount && hasImpData(m)) items.push(['quads', 'Importance and rating charts (self and manager)']);
+  if (m.mgrCount) items.push(['mgrtable', 'Self and manager table']);
+  items.push(['items', 'Item scores']);
+  if (m.opts.comments) items.push(['comments', 'Comments']);
+  const charts = chartOpts(m);
+  let h = '<details class="review"><summary>Choose what goes in the downloaded report</summary>' +
+    '<p class="hint">The screen shows one comparison at a time. The download includes every chart you tick here, each on its own, with no buttons.</p>' +
+    '<p class="rv-comp">Charts: self compared with</p><div class="incl-grid">' +
+    charts.map(o => '<label><input type="checkbox" data-chart="' + esc(o.key) + '"' + (incl.charts[o.key] ? ' checked' : '') + '> ' + esc(o.label) + ' (' + o.n + ')</label>').join('') + '</div>' +
+    '<p class="rv-comp">Other sections</p><div class="incl-grid">' +
+    items.map(x => '<label><input type="checkbox" data-inc="' + x[0] + '"' + (incl[x[0]] !== false ? ' checked' : '') + '> ' + x[1] + '</label>').join('') + '</div></details>';
+  return h;
+}
+$('facInclude').addEventListener('change', e => {
+  const c = e.target;
+  if (!c || !c.matches || !c.matches('input[type=checkbox]')) return;
+  if (c.hasAttribute('data-chart')) incl.charts[c.getAttribute('data-chart')] = c.checked;
+  else if (c.hasAttribute('data-inc')) incl[c.getAttribute('data-inc')] = c.checked;
+});
+$('facReport').addEventListener('click', e => {
+  const b = e.target.closest ? e.target.closest('button[data-cmp]') : null;
+  if (!b || !facModel) return;
+  cmpView = b.getAttribute('data-cmp');
+  $('facReport').innerHTML = lastWarn + comparisonBody(facModel);
+});
+
+function renderFac() {
+  const list = $('facLoaded');
+  if (!loaded.length) {
+    list.innerHTML = '<p class="fac-warn">No files added yet. Add the data files you downloaded, or try the sample data to see what the report looks like.</p>';
+    $('facControls').hidden = true; $('facActions').hidden = true; $('facComments').innerHTML = ''; $('facInclude').innerHTML = '';
+    $('facReport').innerHTML = ''; facModel = null;
+    return;
+  }
+  const keys = [];
+  loaded.forEach(l => { const k = norm(l.resp.student); if (keys.indexOf(k) < 0) keys.push(k); });
+  if (keys.indexOf(selStudent) < 0) selStudent = keys[0];
+
+  list.innerHTML = loaded.map(l => {
+    const label = l.resp.source === 'self' ? 'Self-assessment' : 'Rater · ' + esc(REL_LABEL[l.resp.relationship] || 'Other');
+    return '<div class="file-row"><div class="who"><strong>' + label + '</strong> · ' + esc(l.resp.student) + '<span class="fname">' + esc(l.name) + '</span></div>' +
+      '<button type="button" class="btn-link" aria-label="Remove ' + esc(l.name) + '" onclick="removeLoaded(' + l.id + ')">Remove</button></div>';
+  }).join('');
+
+  const ctr = $('facControls');
+  ctr.hidden = false;
+  let ch = '';
+  if (keys.length > 1) {
+    ch += '<label>Person <select id="studentSel">' + keys.map(k => {
+      const nm = loaded.filter(l => norm(l.resp.student) === k)[0].resp.student;
+      return '<option value="' + esc(k) + '"' + (k === selStudent ? ' selected' : '') + '>' + esc(nm) + '</option>';
+    }).join('') + '</select></label>';
+  }
+  ch += '<fieldset><legend>If a group has fewer than ' + MIN_GROUP + ' responses</legend>' +
+    '<label><input type="radio" name="remedy" value="merge"' + (fopts.remedy === 'merge' ? ' checked' : '') + '> Combine into one All raters group (the manager is still shown separately)</label>' +
+    '<label><input type="radio" name="remedy" value="stop"' + (fopts.remedy === 'stop' ? ' checked' : '') + '> Do not generate the report</label></fieldset>';
+  ch += '<label><input type="checkbox" id="optComments"' + (fopts.comments ? ' checked' : '') + '> Include comments</label>';
+  ctr.innerHTML = ch;
+  if ($('studentSel')) $('studentSel').onchange = e => { selStudent = e.target.value; cmtEditing = null; renderFac(); };
+  ctr.querySelectorAll('input[name="remedy"]').forEach(r => { r.onchange = e => { fopts.remedy = e.target.value; renderFac(); }; });
+  $('optComments').onchange = e => { fopts.comments = e.target.checked; renderFac(); };
+
+  const resps = loaded.filter(l => norm(l.resp.student) === selStudent).map(l => l.resp);
+  const selfs = resps.filter(r => r.source === 'self');
+  const raters = resps.filter(r => r.source === 'rater');
+  facStudentName = resps.length ? resps[0].student : '';
+  const warn = [];
+  if (!selfs.length) warn.push('Add this person’s self-assessment file to build the comparison.');
+  if (selfs.length > 1) warn.push('More than one self-assessment was added for this person. The first one is used.');
+  if (!raters.length) warn.push('Add at least one rater file to build the comparison.');
+  lastWarn = warn.length ? '<p class="fac-warn">' + warn.map(esc).join('<br>') + '</p>' : '';
+  if (!selfs.length || !raters.length) {
+    $('facActions').hidden = true; $('facComments').innerHTML = ''; $('facInclude').innerHTML = '';
+    $('facReport').innerHTML = lastWarn; facModel = null;
+    return;
+  }
+  const model = buildModel(selfs[0], raters, fopts);
+  if (model.blocked) {
+    $('facActions').hidden = true; $('facComments').innerHTML = ''; $('facInclude').innerHTML = ''; facModel = null;
+    $('facReport').innerHTML = lastWarn + '<p class="form-error" role="alert">' + esc(model.reason) + '</p>';
+    return;
+  }
+  facModel = model;
+  facModel.studentName = facStudentName;
+  $('facActions').hidden = false;
+  $('facComments').innerHTML = fopts.comments ? reviewHtml(selfs[0], raters) : '';
+  $('facInclude').innerHTML = includeHtml(facModel);
+  $('facReport').innerHTML = lastWarn + comparisonBody(facModel);
+}
+
+function buildModel(self, raters, o) {
+  const mgr = raters.filter(r => r.relationship === 'manager');
+  const pool = raters;
+  const nonMgr = raters.filter(r => r.relationship !== 'manager');
+  const cats = GROUPS.filter(g => g[0] !== 'manager')
+    .map(g => ({key: g[0], label: g[1], list: nonMgr.filter(r => r.relationship === g[0])}))
+    .filter(c => c.list.length > 0);
+  const small = cats.filter(c => c.list.length < MIN_GROUP);
+  if (pool.length < MIN_GROUP) {
+    return {blocked: true, reason: 'The report was not generated. Only ' + pool.length + ' rater response' + (pool.length === 1 ? ' was' : 's were') + ' received, and at least ' + MIN_GROUP + ' are needed so that no one can be identified.'};
+  }
+  if (small.length && o.remedy === 'stop') {
+    return {blocked: true, reason: 'The report was not generated. ' + small.map(c => c.label + ' (' + c.list.length + ')').join(', ') + (small.length === 1 ? ' has' : ' have') + ' fewer than ' + MIN_GROUP + ' responses. Choose “Combine into one All raters group” to get a report without group breakdowns.'};
+  }
+  const merged = small.length > 0;
+  const cols = [];
+  if (mgr.length) cols.push({key: 'manager', label: 'Manager', list: mgr, n: mgr.length});
+  if (!merged) cats.forEach(c => cols.push({key: c.key, label: c.label, list: c.list, n: c.list.length}));
+  const rows = COMPETENCIES.map((c, ci) => {
+    const g = {};
+    cols.forEach(col => { g[col.key] = mean(col.list.map(r => mean(r.ratings[ci]))); });
+    const selfAvg = mean(self.ratings[ci]);
+    const all = mean(pool.map(r => mean(r.ratings[ci])));
+    const items = c.items.map((p, ii) => {
+      const gi = {};
+      cols.forEach(col => { gi[col.key] = mean(col.list.map(r => r.ratings[ci][ii])); });
+      return {text: p[0], self: self.ratings[ci][ii], groups: gi, all: mean(pool.map(r => r.ratings[ci][ii]))};
+    });
+    const mi = mgr.map(r => r.importance && r.importance[ci]).filter(v => v != null);
+    return {name: c.name, self: selfAvg, groups: g, all: all, gap: selfAvg - all, items: items,
+      mgr: mgr.length ? mean(mgr.map(r => mean(r.ratings[ci]))) : null,
+      selfImp: self.importance ? self.importance[ci] : null, mgrImp: mi.length ? mean(mi) : null};
+  });
+  return {self: self, raters: raters, pool: pool, mgrCount: mgr.length, cols: cols, merged: merged, rows: rows,
+    overallSelf: mean(rows.map(r => r.self)), overallAll: mean(rows.map(r => r.all)), opts: {comments: o.comments}};
+}
+
+
+const MK_CLASS = {self:'mk-self', manager:'mk-manager', peer:'mk-peer', 'direct report':'mk-direct-report', other:'mk-other', all:'mk-all', allc:'mk-allc'};
+const MK_DY = [0, -9, 9, -9, 9, 0];
+function plotRowsHtml(rows, series, connector) {
+  let h = '<div class="legend">' + series.map(sr => '<span><i class="mk lg ' + MK_CLASS[sr.key] + '"></i> ' + esc(sr.label) + '</span>').join('') + '</div>';
+  h += '<div class="plot-row axis"><div></div><div class="plot-track axis">' + [1,2,3,4,5].map(v => '<span class="tick" style="left:' + pct(v) + '%">' + v + '</span>').join('') + '</div></div>';
+  rows.forEach(r => {
+    const vals = series.map(sr => ({sr: sr, v: sr.get(r)})).filter(x => x.v !== null && x.v !== undefined && !isNaN(x.v));
+    const label = esc(r.name) + ': ' + vals.map(x => x.sr.label + ' ' + f1(x.v)).join(', ');
+    let line = '';
+    if (connector && vals.length > 1) {
+      const lo = Math.min.apply(null, vals.map(x => x.v)), hi = Math.max.apply(null, vals.map(x => x.v));
+      line = '<span class="gapline" style="left:' + pct(lo) + '%;width:' + (pct(hi) - pct(lo)).toFixed(1) + '%"></span>';
+    }
+    h += '<div class="plot-row" role="img" aria-label="' + label + '"><div>' + esc(r.name) + '</div><div class="plot-track">' +
+      [1,2,3,4,5].map(v => '<span class="grid" style="left:' + pct(v) + '%"></span>').join('') + line +
+      series.map((sr, si) => { const v = sr.get(r); return (v === null || v === undefined || isNaN(v)) ? '' : '<span class="mk ' + MK_CLASS[sr.key] + '" style="left:' + pct(v) + '%;--dy:' + (connector ? 0 : MK_DY[si % MK_DY.length]) + 'px"></span>'; }).join('') +
+      '</div></div>';
+  });
+  return h;
+}
+
+function quadSvg(pts, who) {
+  // Four equal quadrants: each half of an axis is stretched so the dividing line sits in the middle.
+  const L = 44, T = 30, W = 260, H = 236, R = L + W, B = T + H;
+  const dx = IMPORTANT_MIN - 0.5, dy = LOW_RATING;
+  const pw = (v, d) => v <= d ? 0.5 * (v - 1) / (d - 1) : 0.5 + 0.5 * (v - d) / (5 - d);
+  const X = v => L + pw(v, dx) * W, Y = v => B - pw(v, dy) * H;
+  const xm = L + W / 2, ym = T + H / 2;
+  let g = '<svg class="quad" viewBox="0 0 316 318" role="img" aria-label="' + esc(who) + ': rating against importance">';
+  g += '<rect x="' + L + '" y="' + T + '" width="' + W + '" height="' + H + '" fill="none" stroke="var(--line)"/>';
+  g += '<rect x="' + xm + '" y="' + ym + '" width="' + (W / 2) + '" height="' + (H / 2) + '" fill="var(--gold)" opacity=".18"/>';
+  g += '<line x1="' + xm + '" y1="' + T + '" x2="' + xm + '" y2="' + B + '" stroke="var(--stone-light)" stroke-dasharray="4 3"/>';
+  g += '<line x1="' + L + '" y1="' + ym + '" x2="' + R + '" y2="' + ym + '" stroke="var(--stone-light)" stroke-dasharray="4 3"/>';
+  // end ticks only, since each half has its own scale
+  g += '<text x="' + L + '" y="' + (B + 14) + '" text-anchor="middle" font-size="10" fill="var(--stone)">1</text>';
+  g += '<text x="' + R + '" y="' + (B + 14) + '" text-anchor="middle" font-size="10" fill="var(--stone)">5</text>';
+  g += '<text x="' + (L - 8) + '" y="' + (B + 3) + '" text-anchor="end" font-size="10" fill="var(--stone)">1</text>';
+  g += '<text x="' + (L - 8) + '" y="' + (T + 3) + '" text-anchor="end" font-size="10" fill="var(--stone)">5</text>';
+  g += '<text x="' + xm + '" y="' + (B + 14) + '" text-anchor="middle" font-size="10" fill="var(--stone)">' + dx.toFixed(1) + '</text>';
+  g += '<text x="' + (L - 8) + '" y="' + (ym + 3) + '" text-anchor="end" font-size="10" fill="var(--stone)">' + dy.toFixed(1) + '</text>';
+  // quadrant names sit outside the box, so they never collide with points
+  g += '<text x="' + L + '" y="' + (T - 8) + '" font-size="10" fill="var(--stone)">Less important, rated well</text>';
+  g += '<text x="' + R + '" y="' + (T - 8) + '" text-anchor="end" font-size="10" font-weight="600" fill="var(--ink-soft)">Important, rated well</text>';
+  g += '<text x="' + L + '" y="' + (B + 30) + '" font-size="10" fill="var(--stone)">Less important, rated lower</text>';
+  g += '<text x="' + R + '" y="' + (B + 30) + '" text-anchor="end" font-size="10" font-weight="600" fill="var(--ink)">Important, rated lower</text>';
+  g += '<text x="' + xm + '" y="' + (B + 48) + '" text-anchor="middle" font-size="11" fill="var(--ink-soft)">Importance (1 to 5)</text>';
+  g += '<text transform="translate(11 ' + ym + ') rotate(-90)" text-anchor="middle" font-size="11" fill="var(--ink-soft)">Rating (1 to 5)</text>';
+  const placed = [];
+  pts.forEach(p => {
+    let x = X(p.imp), y = Y(p.rating), tries = 0;
+    while (tries < 14 && placed.some(q => Math.hypot(q.x - x, q.y - y) < 15)) { tries++; const a = tries * 2.4; x = X(p.imp) + Math.cos(a) * 8 * Math.ceil(tries / 4); y = Y(p.rating) + Math.sin(a) * 8 * Math.ceil(tries / 4); }
+    x = Math.max(L + 9, Math.min(R - 9, x)); y = Math.max(T + 9, Math.min(B - 9, y));
+    placed.push({x: x, y: y});
+    const isSelf = who === 'Self';
+    g += '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="8" fill="' + (isSelf ? 'var(--gold)' : 'var(--brand)') + '" stroke="' + (isSelf ? 'var(--navy)' : 'var(--paper-raised)') + '" stroke-width="1.5"/>' +
+      '<text x="' + x.toFixed(1) + '" y="' + (y + 3.5).toFixed(1) + '" text-anchor="middle" font-size="9.5" font-weight="700" fill="' + (isSelf ? '#0C2577' : '#FFFFFF') + '">' + p.n + '</text>';
+  });
+  return g + '</svg>';
+}
+
+function comparisonBody(m, mode) {
+  const screen = mode !== 'print';
+  const inc = k => screen || incl[k] !== false;
+  const rt = m.raters.length;
+  const mgrAll = m.rows.some(r => r.mgr !== null) ? mean(m.rows.map(r => r.mgr)) : null;
+  let h = '<header><p class="rep-kicker">MSLIN · Leadership Development 360°</p><h1>360° Comparison Report</h1>' +
+    '<p class="rep-sub">' + esc(m.self.student) + ' · ' + today() + '</p>' +
+    (inc('summary') ? '<div class="stats"><div class="stat self"><div class="v">' + f1(m.overallSelf) + '</div><div class="l">Self, overall</div></div>' +
+    '<div class="stat raters"><div class="v">' + f1(m.overallAll) + '</div><div class="l">All raters, overall</div></div>' +
+    (mgrAll !== null ? '<div class="stat mgr"><div class="v">' + f1(mgrAll) + '</div><div class="l">Manager, overall</div></div>' : '') +
+    '<div class="stat n"><div class="v">' + rt + '</div><div class="l">rater' + (rt === 1 ? '' : 's') + ' responded</div></div></div>' : '') +
+    '<p class="rep-note">Scale of 1 to 5. All raters includes the manager.</p></header>';
+  if (m.merged) h += '<p class="rep-note">At least one rater group had fewer than ' + MIN_GROUP + ' responses, so raters are not shown by group. All raters are combined into one group, and the manager is still shown separately.</p>';
+
+  const copts = chartOpts(m);
+  const mkSeries = o => [{key: 'self', label: 'Self', get: r => r.self}, {key: o.key, label: o.label + ' (' + o.n + ')', get: o.get}];
+  if (screen) {
+    if (!copts.some(o => o.key === cmpView)) cmpView = 'allc';
+    const cur = copts.filter(o => o.key === cmpView)[0];
+    h += '<h2>At a glance</h2><p class="rep-sub seg-label">Compare self with</p><div class="seg" role="group" aria-label="Compare self with">' +
+      copts.map(o => '<button type="button" data-cmp="' + esc(o.key) + '" aria-pressed="' + (o.key === cmpView) + '">' + esc(o.label) + ' (' + o.n + ')</button>').join('') + '</div>' +
+      plotRowsHtml(m.rows, mkSeries(cur), true);
+  } else {
+    copts.filter(o => incl.charts[o.key]).forEach(o => {
+      h += '<h2>Self compared with ' + esc(o.label) + '</h2>' + plotRowsHtml(m.rows, mkSeries(o), true);
+    });
+  }
+
+  const sorted = m.rows.slice().sort((a, b) => b.gap - a.gap);
+  if (inc('diffs')) {
+  const up = sorted.filter(r => r.gap >= 0.5).slice(0, 3);
+  const down = sorted.slice().reverse().filter(r => r.gap <= -0.5).slice(0, 3);
+  const li = r => '<li>' + esc(r.name) + ' (self ' + f1(r.self) + ', raters ' + f1(r.all) + ', ' + fgap(r.gap) + ')</li>';
+  h += '<h2>Largest differences</h2><div class="diff-grid"><div><h3>Self rated higher than raters</h3>' +
+    (up.length ? '<ul>' + up.map(li).join('') + '</ul>' : '<p class="muted">No gaps of 0.5 or more.</p>') +
+    '</div><div><h3>Raters rated higher than self</h3>' +
+    (down.length ? '<ul>' + down.map(li).join('') + '</ul>' : '<p class="muted">No gaps of 0.5 or more.</p>') + '</div></div>';
+  }
+
+  const bc = (v, cls) => '<td class="cb num ' + (cls || '') + '"><div class="n1">' + f1(v) + '</div><div class="mb"><i style="width:' + (v === null || v === undefined ? 0 : (v / 5 * 100).toFixed(0)) + '%"></i></div></td>';
+  if (inc('groups')) {
+  h += '<h2>' + (m.merged ? 'Averages by competency' : 'Averages by group') + '</h2><div class="table-wrap"><table><thead><tr><th>Competency</th><th class="num">Self</th>' +
+    m.cols.map(c => '<th class="num">' + esc(c.label) + ' (' + c.n + ')</th>').join('') + '<th class="num">All raters (' + m.pool.length + ')</th><th class="num">Gap</th></tr></thead><tbody>';
+  m.rows.forEach(r => {
+    h += '<tr><th scope="row" style="font-weight:500">' + esc(r.name) + '</th>' + bc(r.self, 'self') +
+      m.cols.map(c => bc(r.groups[c.key], c.key === 'manager' ? 'mgr' : '')).join('') + bc(r.all, '') + '<td class="num">' + fgap(r.gap) + '</td></tr>';
+  });
+  h += '</tbody></table></div><p class="rep-note">Bars run from 1 to 5. Gap is self minus all raters. A positive number means the person rated themselves higher than raters did.</p>';
+  }
+
+  if (m.mgrCount && (inc('quads') || inc('mgrtable'))) {
+    const hasImp = hasImpData(m);
+    const lowOf = r => (r.mgr !== null && r.mgr < LOW_RATING) || r.all < LOW_RATING;
+    h += '<h2>Self and manager</h2>';
+    if (m.mgrCount > 1) h += '<p class="rep-note" style="margin-top:0!important">More than one manager responded, so their ratings are averaged.</p>';
+    if (hasImp && inc('quads')) {
+      h += '<h3 style="margin-top:28px">Importance and rating</h3><p class="rep-note" style="margin-top:0!important">Each number is a competency (key below). Competencies in the lower right are rated below ' + LOW_RATING.toFixed(1) + ' but seen as important (' + IMPORTANT_MIN + ' or more). The four quadrants are drawn the same size, with the dividing lines at ' + (IMPORTANT_MIN - 0.5).toFixed(1) + ' and ' + LOW_RATING.toFixed(1) + '.</p><div class="quads">';
+      const ptsOf = (impKey, ratKey) => m.rows.map((r, i) => ({n: i + 1, imp: r[impKey], rating: r[ratKey]})).filter(p => p.imp !== null && p.imp !== undefined && p.rating !== null);
+      h += '<div><h3>Self’s view</h3>' + quadSvg(ptsOf('selfImp', 'self'), 'Self') + '</div>';
+      h += '<div><h3>Manager’s view</h3>' + quadSvg(ptsOf('mgrImp', 'mgr'), 'Manager') + '</div></div>';
+      h += '<ul class="qkey">' + m.rows.map((r, i) => '<li><b>' + (i + 1) + '</b>' + esc(r.name) + '</li>').join('') + '</ul>';
+    }
+    if (inc('mgrtable')) {
+    h += '<div class="table-wrap" style="margin-top:20px"><table><thead><tr><th>Competency</th><th class="num">Self rating</th><th class="num">Manager rating</th><th class="num">Gap</th>' + (hasImp ? '<th class="num">Self importance</th><th class="num">Manager importance</th><th>Note</th>' : '') + '</tr></thead><tbody>';
+    m.rows.forEach(r => {
+      const notes = [];
+      if (r.mgrImp !== null && r.mgrImp >= IMPORTANT_MIN && lowOf(r)) notes.push('Important to manager, rated lower');
+      if (r.selfImp !== null && r.mgrImp !== null && Math.abs(r.selfImp - r.mgrImp) >= 2) notes.push('Views of importance differ');
+      h += '<tr><th scope="row" style="font-weight:500">' + esc(r.name) + '</th><td class="num">' + f1(r.self) + '</td><td class="num">' + f1(r.mgr) + '</td><td class="num">' + fgap(r.self - r.mgr) + '</td>' +
+        (hasImp ? '<td class="num">' + f1(r.selfImp) + '</td><td class="num">' + f1(r.mgrImp) + '</td><td>' + esc(notes.join('; ')) + '</td>' : '') + '</tr>';
+    });
+    h += '</tbody></table></div><p class="rep-note">Importance: 1 = Not important, 5 = Critical. Gap is self minus manager.</p>';
+    }
+  }
+
+  const head = '<th class="num">Self</th>' + m.cols.map(c => '<th class="num">' + esc(c.label) + ' (n=' + c.n + ')</th>').join('') + '<th class="num">All raters (n=' + m.pool.length + ')</th>';
+
+  if (inc('items')) h += '<h2>Item scores</h2>';
+  if (inc('items')) m.rows.forEach(r => {
+    h += '<details><summary>' + esc(r.name) + '</summary><div class="table-wrap"><table><thead><tr><th>Statement</th>' + head + '</tr></thead><tbody>';
+    r.items.forEach(it => {
+      h += '<tr><td>' + esc(it.text) + '</td><td class="num">' + it.self + '</td>' + m.cols.map(c => '<td class="num">' + f1(it.groups[c.key]) + '</td>').join('') + '<td class="num">' + f1(it.all) + '</td></tr>';
+    });
+    h += '</tbody></table></div></details>';
+  });
+
+  if (m.opts.comments && inc('comments')) {
+    h += '<h2>Comments</h2>';
+    let any = false;
+    COMPETENCIES.forEach((c, ci) => {
+      const selfC = effComment(m.self, ci);
+      const rc = m.raters.map(r => effComment(r, ci)).filter(Boolean).sort((a, b) => a.localeCompare(b));
+      if (!selfC && !rc.length) return;
+      any = true;
+      h += '<h3>' + esc(c.name) + '</h3>';
+      if (selfC) h += '<p class="who">Self</p><ul class="comments"><li>' + esc(selfC) + '</li></ul>';
+      if (rc.length) h += '<p class="who">Raters</p><ul class="comments">' + rc.map(t => '<li>' + esc(t) + '</li>').join('') + '</ul>';
+    });
+    if (!any) h += '<p class="muted">No comments are included.</p>';
+    h += '<p class="rep-note">Rater comments are listed without names or groups, in alphabetical order.</p>';
+  }
+  return h;
+}
+
+function saveFacHtml() {
+  if (!facModel) return;
+  saveFile('360-comparison-report-' + slug(facModel.studentName) + '.html', docHtml('360 Comparison Report – ' + facModel.studentName, comparisonBody(facModel, 'print')), $('facStatus'), $('facFallback'));
+}
+function saveFacCsv() {
+  if (!facModel) return;
+  const m = facModel;
+  const head = ['competency', 'self'].concat(m.cols.map(c => c.key.replace(' ', '_') + '_n' + c.n), ['all_raters_n' + m.pool.length, 'gap'], m.mgrCount ? ['self_importance', 'manager_importance'] : []);
+  const out = [head.map(cell).join(',')];
+  const num = v => (v === null || v === undefined ? '' : v.toFixed(2));
+  m.rows.forEach(r => {
+    out.push([r.name, num(r.self)].concat(m.cols.map(c => num(r.groups[c.key])), [num(r.all), num(r.gap)], m.mgrCount ? [num(r.selfImp), num(r.mgrImp)] : []).map(cell).join(','));
+  });
+  saveFile('360-comparison-summary-' + slug(m.studentName) + '.csv', '﻿' + out.join('\r\n') + '\r\n', $('facStatus'), $('facFallback'));
+}
+</script>
+
+</body>
+</html>
