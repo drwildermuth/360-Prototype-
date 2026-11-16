@@ -10,42 +10,42 @@
 <style>
   /* Layout: narrow single column for the survey, widening for reports. Navy, lime, purple and gold on a cool paper ground. */
   :root {
-    --brand: #5E3A99;
-    --brand-dark: #47287A;
-    --brand-tint: #EEE8F7;
+    --brand: #847296;
+    --brand-dark: #66577B;
+    --brand-tint: #EFEBF3;
     --on-brand: #FFFFFF;
-    --navy: #0C2577;
-    --lime: #9ECA27;
-    --gold: #E3A92B;
-    --teal: #1F8A9B;
-    --stone: #5F6A88;
-    --stone-light: #9AA4C0;
-    --paper: #F4F6FB;
+    --navy: #172D60;
+    --lime: #91A66D;
+    --gold: #C1A069;
+    --teal: #5E8C94;
+    --stone: #5F6682;
+    --stone-light: #A3A7B8;
+    --paper: #F7F4EC;
     --paper-raised: #FFFFFF;
-    --ink: #1B2540;
-    --ink-soft: #46517A;
-    --line: #D5DCEE;
-    --focus: #0C2577;
+    --ink: #1A2440;
+    --ink-soft: #4A5373;
+    --line: #DDD8CA;
+    --focus: #172D60;
     --font-display: 'Maven Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
       color-scheme: dark;
-      --brand: #A98BE0; --brand-dark: #C9B4F2; --brand-tint: #2B2250; --on-brand: #160C2E;
-      --navy: #B9C8FF; --lime: #B5DC4A; --gold: #F0BB45; --teal: #4FC3D4;
-      --stone: #A3AECF; --stone-light: #66739C;
-      --paper: #0D1530; --paper-raised: #162046; --ink: #EEF1FA; --ink-soft: #B9C2DE;
-      --line: #2B3866; --focus: #F0BB45;
+      --brand: #B4A5C6; --brand-dark: #D3C8E0; --brand-tint: #2A2338; --on-brand: #1B1428;
+      --navy: #BAC5E6; --lime: #A9BD85; --gold: #D3B67F; --teal: #85B3B9;
+      --stone: #A7ACC4; --stone-light: #68719A;
+      --paper: #0F1A38; --paper-raised: #17254A; --ink: #F2F0EA; --ink-soft: #C4C9DC;
+      --line: #2D3A66; --focus: #D3B67F;
     }
   }
   :root[data-theme="dark"] {
     color-scheme: dark;
-    --brand: #A98BE0; --brand-dark: #C9B4F2; --brand-tint: #2B2250; --on-brand: #160C2E;
-    --navy: #B9C8FF; --lime: #B5DC4A; --gold: #F0BB45; --teal: #4FC3D4;
-    --stone: #A3AECF; --stone-light: #66739C;
-    --paper: #0D1530; --paper-raised: #162046; --ink: #EEF1FA; --ink-soft: #B9C2DE;
-    --line: #2B3866; --focus: #F0BB45;
+    --brand: #B4A5C6; --brand-dark: #D3C8E0; --brand-tint: #2A2338; --on-brand: #1B1428;
+    --navy: #BAC5E6; --lime: #A9BD85; --gold: #D3B67F; --teal: #85B3B9;
+    --stone: #A7ACC4; --stone-light: #68719A;
+    --paper: #0F1A38; --paper-raised: #17254A; --ink: #F2F0EA; --ink-soft: #C4C9DC;
+    --line: #2D3A66; --focus: #D3B67F;
   }
   * { box-sizing: border-box; }
   html, body { height: 100%; }
@@ -183,8 +183,8 @@
   .nav-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: auto; padding-top: 28px; }
   button { font-family: inherit; font-size: 14px; font-weight: 600; border-radius: 3px; padding: 12px 22px; cursor: pointer; border: 1px solid transparent; }
   button:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
-  .btn-primary { background: var(--brand); color: var(--on-brand); border-color: var(--brand); }
-  .btn-primary:hover { background: var(--brand-dark); border-color: var(--brand-dark); }
+  .btn-primary { background: var(--brand-dark); color: var(--on-brand); border-color: var(--brand-dark); }
+  .btn-primary:hover { filter: brightness(.9); }
   .btn-primary:disabled { opacity: .4; cursor: not-allowed; }
   .btn-ghost { background: transparent; color: var(--ink-soft); border-color: var(--line); }
   .btn-ghost:hover { border-color: var(--stone-light); color: var(--ink); }
@@ -485,7 +485,7 @@ const REPORT_CSS = `
 .rep h2{font-size:20px;margin:36px 0 12px}
 .rep h3{font-size:16px;margin:18px 0 6px}
 .rep p{margin:0}
-.rep-kicker{font-size:12px;letter-spacing:.06em;text-transform:uppercase;font-weight:600;color:var(--brand);margin:0 0 8px!important}
+.rep-kicker{font-size:12px;letter-spacing:.06em;text-transform:uppercase;font-weight:600;color:var(--brand-dark);margin:0 0 8px!important}
 .rep-sub{color:var(--ink-soft);font-size:14px;margin-top:8px!important}
 .rep .mk-allc{background:var(--navy);border:2px solid var(--paper-raised);z-index:2}
 .rep-note{font-size:12.5px;color:var(--stone);margin-top:10px!important}
@@ -525,7 +525,7 @@ const REPORT_CSS = `
 .rep .mk-all{background:var(--ink);border-radius:2px;width:4px;height:22px;z-index:2}
 .rep .seg{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 10px}
 .rep .seg button{padding:6px 12px;font-size:13px;font-weight:600;border:1px solid var(--line);background:var(--paper-raised);color:var(--ink-soft);border-radius:999px}
-.rep .seg button[aria-pressed="true"]{background:var(--brand);border-color:var(--brand);color:var(--on-brand,#fff)}
+.rep .seg button[aria-pressed="true"]{background:var(--brand-dark);border-color:var(--brand-dark);color:var(--on-brand,#fff)}
 .rep .seg-label{font-size:12px;color:var(--ink-soft);margin:0 0 6px!important}
 .rep .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin:22px 0 4px}
 .rep .stat{background:var(--paper-raised);border:1px solid var(--line);border-radius:4px;padding:12px 14px}
@@ -554,7 +554,7 @@ const REPORT_CSS = `
 .rep .gapline{position:absolute;top:50%;height:4px;border-radius:2px;background:var(--stone-light);transform:translateY(-50%)}
 @media (max-width:560px){.rep .plot-row{grid-template-columns:1fr;gap:2px}.rep .plot-row.axis>div:first-child{display:none}}
 `;
-const LIGHT_TOKENS = ':root{--brand:#5E3A99;--brand-dark:#47287A;--brand-tint:#EEE8F7;--navy:#0C2577;--lime:#9ECA27;--gold:#E3A92B;--teal:#1F8A9B;--stone:#5F6A88;--stone-light:#9AA4C0;--paper:#FFFFFF;--paper-raised:#FFFFFF;--ink:#1B2540;--ink-soft:#46517A;--line:#D5DCEE;--font-display:"Maven Pro",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;--font-body:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}body{margin:0;background:#fff;color:#1B2540}.rep-page{max-width:900px;margin:0 auto;padding:32px 24px}@media print{.rep-page{padding:0}.rep h2{break-after:avoid}.rep details{break-inside:avoid}}';
+const LIGHT_TOKENS = ':root{--brand:#847296;--brand-dark:#66577B;--brand-tint:#EFEBF3;--navy:#172D60;--lime:#91A66D;--gold:#C1A069;--teal:#5E8C94;--stone:#5F6682;--stone-light:#A3A7B8;--paper:#FFFFFF;--paper-raised:#FFFFFF;--ink:#1A2440;--ink-soft:#4A5373;--line:#DDD8CA;--font-display:"Maven Pro",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;--font-body:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}body{margin:0;background:#fff;color:#1A2440}.rep-page{max-width:900px;margin:0 auto;padding:32px 24px}@media print{.rep-page{padding:0}.rep h2{break-after:avoid}.rep details{break-inside:avoid}}';
 (function () {
   const st = document.createElement('style');
   st.textContent = REPORT_CSS;
@@ -946,7 +946,7 @@ function introHtml() {
 }
 const INTRO_CSS = '.rep .intro{break-after:page;page-break-after:always}.rep .intro h1{font-size:28px;margin:0 0 18px}.rep .intro h3{margin:18px 0 6px}.rep .intro p{font-size:14px;line-height:1.55;margin:0 0 8px}.rep .intro ul{margin:4px 0 0;padding-left:20px;font-size:14px;line-height:1.55}.rep .intro li{margin:3px 0}';
 function printPdf(title, body, statusEl, cover) {
-  const banner = '<div class="no-print" style="position:sticky;top:0;z-index:9;background:#5E3A99;color:#fff;padding:12px 16px;font-family:system-ui,-apple-system,Arial,sans-serif;font-size:14px;display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap"><span>Tap the button, then choose “Save as PDF” as the destination.</span><button type="button" onclick="window.print()" style="background:#fff;color:#5E3A99;border:0;border-radius:3px;padding:10px 18px;font-size:14px;font-weight:600;cursor:pointer">Save as PDF</button></div>';
+  const banner = '<div class="no-print" style="position:sticky;top:0;z-index:9;background:#66577B;color:#fff;padding:12px 16px;font-family:system-ui,-apple-system,Arial,sans-serif;font-size:14px;display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap"><span>Tap the button, then choose “Save as PDF” as the destination.</span><button type="button" onclick="window.print()" style="background:#fff;color:#66577B;border:0;border-radius:3px;padding:10px 18px;font-size:14px;font-weight:600;cursor:pointer">Save as PDF</button></div>';
   const printCss = '@page{margin:16mm}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}@media print{.no-print{display:none!important}}' + COVER_CSS + INTRO_CSS;
   const html = docHtml(title, (cover || '') + (cover ? introHtml() : '') + body).replace('</style>', printCss + '</style>').replace('<body>', '<body>' + banner);
   const w = window.open('', '_blank');
@@ -1328,7 +1328,7 @@ function quadSvg(pts, who) {
     placed.push({x: x, y: y});
     const isSelf = who === 'Self';
     g += '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="8" fill="' + (isSelf ? 'var(--gold)' : 'var(--brand)') + '" stroke="' + (isSelf ? 'var(--navy)' : 'var(--paper-raised)') + '" stroke-width="1.5"/>' +
-      '<text x="' + x.toFixed(1) + '" y="' + (y + 3.5).toFixed(1) + '" text-anchor="middle" font-size="9.5" font-weight="700" fill="' + (isSelf ? '#0C2577' : '#FFFFFF') + '">' + p.n + '</text>';
+      '<text x="' + x.toFixed(1) + '" y="' + (y + 3.5).toFixed(1) + '" text-anchor="middle" font-size="9.5" font-weight="700" fill="' + (isSelf ? '#172D60' : '#FFFFFF') + '">' + p.n + '</text>';
   });
   return g + '</svg>';
 }
