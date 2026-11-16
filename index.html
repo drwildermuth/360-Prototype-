@@ -318,7 +318,8 @@
       <div class="summary-line" id="timeSummary"></div>
     </div>
     <div class="actions">
-      <button type="button" class="btn-primary" onclick="saveSingleHtml()">Download report (.html)</button>
+      <button type="button" class="btn-primary" onclick="saveSinglePdf()">Download report (.pdf)</button>
+      <button type="button" class="btn-ghost" onclick="saveSingleHtml()">Download report (.html)</button>
       <button type="button" class="btn-ghost" onclick="saveSingleCsv()">Download data (.csv)</button>
     </div>
     <p class="dl-status" id="doneStatus" role="status"></p>
@@ -348,8 +349,13 @@
     <div class="fac-controls" id="facControls" hidden></div>
     <div id="facComments"></div>
     <div id="facInclude"></div>
+        <div class="field" style="max-width:360px;margin-top:18px">
+      <label for="preparedBy">Prepared by (consultant's name, shown on the PDF title page)</label>
+      <input type="text" id="preparedBy" autocomplete="off" maxlength="80">
+    </div>
     <div class="actions" id="facActions" hidden>
-      <button type="button" class="btn-primary" onclick="saveFacHtml()">Download comparison (.html)</button>
+      <button type="button" class="btn-primary" onclick="saveFacPdf()">Download comparison (.pdf)</button>
+      <button type="button" class="btn-ghost" onclick="saveFacHtml()">Download comparison (.html)</button>
       <button type="button" class="btn-ghost" onclick="saveFacCsv()">Download summary (.csv)</button>
     </div>
     <p class="dl-status" id="facStatus" role="status"></p>
@@ -900,6 +906,68 @@ function copyFallback(btn) {
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(ta.value).then(() => { btn.textContent = 'Copied'; }).catch(() => { btn.textContent = ok ? 'Copied' : 'Press and hold to copy'; });
   } else btn.textContent = ok ? 'Copied' : 'Press and hold to copy';
+}
+
+/* ---------- PDF (uses the browser's print dialog: choose "Save as PDF") ---------- */
+const BRAND_LOGO = '';
+const AUTHOR_NAME = 'Cristina Wildermuth';
+function coverHtml(title, name, sub, preparedBy) {
+  const yr = new Date().getFullYear();
+  return '<section class="cover">' +
+    '<div class="cover-top">' + (BRAND_LOGO ? '<img class="cover-logo" alt="" src="' + BRAND_LOGO + '">' : '') + '</div>' +
+    '<div class="cover-mid"><div class="cover-rule"></div><h1>' + esc(title) + '</h1><p class="cover-name">' + esc(name) + '</p>' +
+    (sub ? '<p class="cover-sub">' + esc(sub) + '</p>' : '') + '<p class="cover-date">' + today() + '</p></div>' +
+    '<div class="cover-foot">' + (preparedBy ? '<p><span>Prepared by</span> ' + esc(preparedBy) + '</p>' : '') +
+    '<p><span>Instrument developed by</span> ' + esc(AUTHOR_NAME) + '</p>' +
+    '<p class="cover-small">© ' + yr + ' ' + esc(AUTHOR_NAME) + '. All rights reserved.</p>' +
+    '<p class="cover-small">Confidential. Please do not share without permission.</p></div></section>';
+}
+const COVER_CSS = '.rep .cover{display:flex;flex-direction:column;justify-content:space-between;min-height:9.4in;break-after:page;page-break-after:always}' +
+  '.rep .cover-logo{width:220px;height:auto;display:block}' +
+  '.rep .cover-rule{width:64px;height:5px;background:var(--lime);margin-bottom:28px}' +
+  '.rep .cover h1{font-size:42px;line-height:1.1;margin:0 0 22px}' +
+  '.rep .cover-name{font-family:var(--font-display);font-size:26px;color:var(--ink);margin:0 0 6px}' +
+  '.rep .cover-sub{font-size:16px;color:var(--ink-soft);margin:0 0 6px}' +
+  '.rep .cover-date{font-size:14px;color:var(--stone);margin-top:18px}' +
+  '.rep .cover-foot{border-top:1px solid var(--line);padding-top:16px;font-size:13px;color:var(--ink-soft)}' +
+  '.rep .cover-foot p{margin:0 0 6px}.rep .cover-foot span{color:var(--stone)}' +
+  '.rep .cover-foot .cover-small{font-size:11.5px;color:var(--stone)}';
+function printPdf(title, body, statusEl, cover) {
+  const banner = '<div class="no-print" style="position:sticky;top:0;z-index:9;background:#5E3A99;color:#fff;padding:12px 16px;font-family:system-ui,-apple-system,Arial,sans-serif;font-size:14px;display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap"><span>Tap the button, then choose “Save as PDF” as the destination.</span><button type="button" onclick="window.print()" style="background:#fff;color:#5E3A99;border:0;border-radius:3px;padding:10px 18px;font-size:14px;font-weight:600;cursor:pointer">Save as PDF</button></div>';
+  const printCss = '@page{margin:16mm}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}@media print{.no-print{display:none!important}}' + COVER_CSS;
+  const html = docHtml(title, (cover || '') + body).replace('</style>', printCss + '</style>').replace('<body>', '<body>' + banner);
+  const w = window.open('', '_blank');
+  if (w) {
+    w.document.open(); w.document.write(html); w.document.close();
+    statusEl.textContent = 'The report opened in a new tab. Tap Save as PDF at the top of that tab.';
+    return;
+  }
+  // pop-up blocked: print from a hidden frame instead
+  const f = document.createElement('iframe');
+  f.setAttribute('aria-hidden', 'true');
+  f.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;';
+  f.srcdoc = html;
+  const prevTitle = document.title;
+  f.onload = () => {
+    try { document.title = title; f.contentWindow.focus(); f.contentWindow.print(); }
+    catch (e) { statusEl.textContent = 'Your browser blocked the new tab. Allow pop-ups for this site and try again, or use the .html download.'; }
+    setTimeout(() => { document.title = prevTitle; f.remove(); }, 60000);
+  };
+  statusEl.textContent = 'If nothing opens, allow pop-ups for this site and try again.';
+  document.body.appendChild(f);
+}
+function saveSinglePdf() {
+  const r = currentResp();
+  const isSelf = r.source === 'self';
+  const title = '360-' + (isSelf ? 'self' : 'rater-' + slug(r.relationship)) + '-report-' + slug(r.student);
+  const cover = coverHtml(isSelf ? 'Self-Assessment Report' : 'Rater Feedback Report', r.student, isSelf ? '' : 'Rater feedback · ' + (REL_LABEL[r.relationship] || r.relationship), '');
+  printPdf(title, singleReportBody(r), $('doneStatus'), cover);
+}
+function saveFacPdf() {
+  if (!facModel) return;
+  const n = facModel.raters.length;
+  const cover = coverHtml('360° Comparison Report', facModel.studentName, 'Self-assessment and ' + n + ' rater' + (n === 1 ? '' : 's'), $('preparedBy').value.trim());
+  printPdf('360-comparison-report-' + slug(facModel.studentName), comparisonBody(facModel, 'print'), $('facStatus'), cover);
 }
 
 function saveSingleHtml() {
