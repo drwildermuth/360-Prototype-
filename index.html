@@ -553,6 +553,22 @@ const REPORT_CSS = `
 .rep .mk.raters{background:var(--navy);border:2px solid var(--paper-raised);z-index:1}
 .rep .gapline{position:absolute;top:50%;height:4px;border-radius:2px;background:var(--stone-light);transform:translateY(-50%)}
 @media (max-width:560px){.rep .plot-row{grid-template-columns:1fr;gap:2px}.rep .plot-row.axis>div:first-child{display:none}}
+.rep .sum{margin:12px 0 0}.rep .sum h2{margin:0 0 10px}
+.rep .sum-legend{display:flex;flex-wrap:wrap;gap:16px;font-size:12.5px;color:var(--ink-soft);margin:0 0 6px}
+.rep .sum-legend span{display:inline-flex;align-items:center;gap:6px}
+.rep .sum-legend .k-bar{width:22px;height:8px;border-radius:4px;background:var(--navy)}
+.rep .sum-legend .k-self{width:12px;height:12px;border-radius:50%;background:var(--gold);border:2px solid var(--navy)}
+.rep .sum-row{padding:3px 0 3px;border-top:1px solid var(--line);break-inside:avoid;page-break-inside:avoid}
+.rep .sum-head{display:flex;align-items:baseline;gap:10px}
+.rep .sum-name{font-family:var(--font-display);font-weight:600;font-size:15px;color:var(--navy)}
+.rep .sum-tag{font-size:11px;font-weight:600;color:var(--ink-soft);border:1px solid var(--line);border-radius:999px;padding:1px 8px;white-space:nowrap}
+.rep .sum-score{margin-left:auto;font-weight:600;font-size:14px;color:var(--navy);white-space:nowrap}
+.rep .sum-score small{font-weight:400;color:var(--stone);font-size:12px}
+.rep .sum-track{position:relative;height:10px;background:var(--line);border-radius:5px;margin:4px 0 3px}
+.rep .sum-fill{position:absolute;left:0;top:0;bottom:0;background:var(--navy);border-radius:5px}
+.rep .sum-self{position:absolute;top:50%;width:16px;height:16px;border-radius:50%;background:var(--gold);border:2px solid var(--navy);transform:translate(-50%,-50%);z-index:2}
+.rep .sum-desc{font-size:12px;color:var(--ink-soft);line-height:1.3}
+@media print{.rep .sum-page{break-after:page;page-break-after:always}.rep header h1{font-size:24px}.rep header .rep-sub{margin-top:4px!important}.rep .sum h2{font-size:17px;margin:0 0 6px}.rep .sum{margin:8px 0 0}}
 `;
 const LIGHT_TOKENS = ':root{--brand:#847296;--brand-dark:#66577B;--brand-tint:#EFEBF3;--navy:#172D60;--lime:#91A66D;--gold:#C1A069;--teal:#5E8C94;--stone:#5F6682;--stone-light:#A3A7B8;--paper:#FFFFFF;--paper-raised:#FFFFFF;--ink:#1A2440;--ink-soft:#4A5373;--line:#DDD8CA;--font-display:"Maven Pro",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;--font-body:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}body{margin:0;background:#fff;color:#1A2440}.rep-page{max-width:900px;margin:0 auto;padding:32px 24px}@media print{.rep-page{padding:0}.rep h2{break-after:avoid}.rep details{break-inside:avoid}}';
 (function () {
@@ -560,6 +576,39 @@ const LIGHT_TOKENS = ':root{--brand:#847296;--brand-dark:#66577B;--brand-tint:#E
   st.textContent = REPORT_CSS;
   document.head.appendChild(st);
 })();
+
+const COMP_DESC = [
+  'Adjusting to people and situations, and staying effective through change and uncertainty.',
+  'Seeing where you are headed and inspiring others to share that direction.',
+  'Listening well and expressing yourself clearly and tactfully.',
+  'Helping people learn and grow.',
+  'Setting high goals and following through with urgency and persistence.',
+  'Being fair, keeping your word, and acting in line with what you say.',
+  'Analyzing problems and making timely, well-informed decisions.',
+  'Conducting yourself with composure, openness to feedback, and a commitment to keep learning.',
+  'Recognizing contributions and bringing people into the work and the decisions.',
+  'Working respectfully and effectively across cultures and differences.',
+  'Building warm, collaborative relationships and handling conflict well.',
+  'Embracing change and supporting followers through change-related challenges.'
+];
+// rows: [{name, avg, self (optional)}]; barLabel names what the bar shows
+function summaryHtml(rows, barLabel, withSelf, note) {
+  let h = '<div class="sum sum-page"><h2>Leadership profile at a glance</h2><div class="sum-legend"><span><i class="k-bar"></i> ' + esc(barLabel) + '</span>' +
+    (withSelf ? '<span><i class="k-self"></i> Self-assessment</span>' : '') + '<span>Scale of 1 to 5</span></div>';
+  rows.forEach((r, i) => {
+    let tag = '';
+    if (withSelf && r.self !== null && r.self !== undefined) {
+      const g = r.self - r.avg;
+      if (g >= 0.5) tag = '<span class="sum-tag">Self rated higher</span>';
+      else if (g <= -0.5) tag = '<span class="sum-tag">Self rated lower</span>';
+    }
+    h += '<div class="sum-row"><div class="sum-head"><span class="sum-name">' + esc(r.name) + '</span>' + tag + '<span class="sum-score">' + f1(r.avg) + ' <small>/ 5</small></span></div>' +
+      '<div class="sum-track" role="img" aria-label="' + esc(r.name) + ': ' + esc(barLabel) + ' ' + f1(r.avg) + (withSelf ? ', self ' + f1(r.self) : '') + '"><div class="sum-fill" style="width:' + (r.avg / 5 * 100).toFixed(1) + '%"></div>' +
+      (withSelf ? '<div class="sum-self" style="left:' + (r.self / 5 * 100).toFixed(1) + '%"></div>' : '') + '</div>' +
+      '<div class="sum-desc">' + esc(COMP_DESC[i] || '') + '</div></div>';
+  });
+  return h + (note ? '<p class="rep-note">' + note + '</p>' : '') + '</div>';
+}
 
 function docHtml(title, body) {
   return '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>' + esc(title) + '</title><style>' + LIGHT_TOKENS + REPORT_CSS + '</style></head><body><div class="rep-page rep">' + body.replace(/<details>/g, '<details open>') + '</div></body></html>';
@@ -733,6 +782,7 @@ function singleReportBody(resp) {
     '<p class="rep-sub">' + (isSelf ? esc(resp.student) : 'Feedback on ' + esc(resp.student) + ' · ' + esc(REL_LABEL[resp.relationship] || resp.relationship)) + ' · ' + today() + '</p>' +
     '<p class="rep-sub">Overall average: <strong>' + f1(overall) + '</strong> on a scale of 1 to 5</p></header>';
 
+  if (isSelf) h += summaryHtml(rows.map(r => ({name: r.name, avg: r.avg})), 'Your rating', false, '');
   h += '<h2>Competency averages</h2><div class="table-wrap"><table><thead><tr><th>Competency</th><th class="num">Average</th>' + (hasImp ? '<th class="num">Importance</th>' : '') + '<th>&nbsp;</th></tr></thead><tbody>';
   rows.forEach(r => {
     h += '<tr><th scope="row" style="font-weight:500">' + esc(r.name) + '</th><td class="num">' + f1(r.avg) + '</td>' + (hasImp ? '<td class="num">' + (r.imp === null ? '—' : r.imp) + '</td>' : '') + '<td><div class="bar"><span style="width:' + (r.avg / 5 * 100).toFixed(0) + '%"></span></div></td></tr>';
@@ -1339,7 +1389,9 @@ function comparisonBody(m, mode) {
   const rt = m.raters.length;
   const mgrAll = m.rows.some(r => r.mgr !== null) ? mean(m.rows.map(r => r.mgr)) : null;
   let h = '<header><p class="rep-kicker">Leadership Development 360°</p><h1>360° Comparison Report</h1>' +
-    '<p class="rep-sub">' + esc(m.self.student) + ' · ' + today() + '</p>' +
+    '<p class="rep-sub">' + esc(m.self.student) + ' · ' + today() + '</p></header>';
+  h += summaryHtml(m.rows.map(r => ({name: r.name, avg: r.all, self: r.self})), 'All raters, including manager', true, '');
+  h += '<header>' +
     (inc('summary') ? '<div class="stats"><div class="stat self"><div class="v">' + f1(m.overallSelf) + '</div><div class="l">Self, overall</div></div>' +
     '<div class="stat raters"><div class="v">' + f1(m.overallAll) + '</div><div class="l">All raters, overall</div></div>' +
     (mgrAll !== null ? '<div class="stat mgr"><div class="v">' + f1(mgrAll) + '</div><div class="l">Manager, overall</div></div>' : '') +
