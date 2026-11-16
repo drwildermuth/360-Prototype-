@@ -318,7 +318,8 @@
       <div class="summary-line" id="timeSummary"></div>
     </div>
     <div class="actions">
-      <button type="button" class="btn-primary" onclick="saveSingleHtml()">Download report (.html)</button>
+      <button type="button" class="btn-primary" onclick="saveSinglePdf()">Download report (.pdf)</button>
+      <button type="button" class="btn-ghost" onclick="saveSingleHtml()">Download report (.html)</button>
       <button type="button" class="btn-ghost" onclick="saveSingleCsv()">Download data (.csv)</button>
     </div>
     <p class="dl-status" id="doneStatus" role="status"></p>
@@ -349,7 +350,8 @@
     <div id="facComments"></div>
     <div id="facInclude"></div>
     <div class="actions" id="facActions" hidden>
-      <button type="button" class="btn-primary" onclick="saveFacHtml()">Download comparison (.html)</button>
+      <button type="button" class="btn-primary" onclick="saveFacPdf()">Download comparison (.pdf)</button>
+      <button type="button" class="btn-ghost" onclick="saveFacHtml()">Download comparison (.html)</button>
       <button type="button" class="btn-ghost" onclick="saveFacCsv()">Download summary (.csv)</button>
     </div>
     <p class="dl-status" id="facStatus" role="status"></p>
@@ -900,6 +902,31 @@ function copyFallback(btn) {
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(ta.value).then(() => { btn.textContent = 'Copied'; }).catch(() => { btn.textContent = ok ? 'Copied' : 'Press and hold to copy'; });
   } else btn.textContent = ok ? 'Copied' : 'Press and hold to copy';
+}
+
+/* ---------- PDF (uses the browser's print dialog: choose "Save as PDF") ---------- */
+function printPdf(title, body, statusEl) {
+  const f = document.createElement('iframe');
+  f.setAttribute('aria-hidden', 'true');
+  f.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;';
+  f.srcdoc = docHtml(title, body).replace('</style>', '@page{margin:16mm}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}</style>');
+  const prevTitle = document.title;
+  f.onload = () => {
+    try { document.title = title; f.contentWindow.focus(); f.contentWindow.print(); }
+    catch (e) { statusEl.textContent = 'The print window could not open. Use the .html download instead, open it, and print it to PDF.'; }
+    setTimeout(() => { document.title = prevTitle; f.remove(); }, 60000);
+  };
+  statusEl.textContent = 'In the print window that opens, choose \u201cSave as PDF\u201d as the destination.';
+  document.body.appendChild(f);
+}
+function saveSinglePdf() {
+  const r = currentResp();
+  const title = '360-' + (r.source === 'self' ? 'self' : 'rater-' + slug(r.relationship)) + '-report-' + slug(r.student);
+  printPdf(title, singleReportBody(r), $('doneStatus'));
+}
+function saveFacPdf() {
+  if (!facModel) return;
+  printPdf('360-comparison-report-' + slug(facModel.studentName), comparisonBody(facModel, 'print'), $('facStatus'));
 }
 
 function saveSingleHtml() {
