@@ -568,7 +568,7 @@ const REPORT_CSS = `
 .rep .sum-fill{position:absolute;left:0;top:0;bottom:0;background:var(--navy);border-radius:5px}
 .rep .sum-self{position:absolute;top:50%;width:16px;height:16px;border-radius:50%;background:var(--gold);border:2px solid var(--navy);transform:translate(-50%,-50%);z-index:2}
 .rep .sum-desc{font-size:12px;color:var(--ink-soft);line-height:1.3}
-@media print{.rep .sum-page{break-after:page;page-break-after:always}.rep header h1{font-size:24px}.rep header .rep-sub{margin-top:4px!important}.rep .sum h2{font-size:17px;margin:0 0 6px}.rep .sum{margin:8px 0 0}}
+@media print{.rep .keep{break-inside:avoid;page-break-inside:avoid}.rep .sum-page{break-after:page;page-break-after:always}.rep header h1{font-size:24px}.rep header .rep-sub{margin-top:4px!important}.rep .sum h2{font-size:17px;margin:0 0 6px}.rep .sum{margin:8px 0 0}}
 `;
 const LIGHT_TOKENS = ':root{--brand:#847296;--brand-dark:#66577B;--brand-tint:#EFEBF3;--navy:#172D60;--lime:#91A66D;--gold:#C1A069;--teal:#5E8C94;--stone:#5F6682;--stone-light:#A3A7B8;--paper:#FFFFFF;--paper-raised:#FFFFFF;--ink:#1A2440;--ink-soft:#4A5373;--line:#DDD8CA;--font-display:"Maven Pro",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;--font-body:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}body{margin:0;background:#fff;color:#1A2440}.rep-page{max-width:900px;margin:0 auto;padding:32px 24px}@media print{.rep-page{padding:0}.rep h2{break-after:avoid}.rep details{break-inside:avoid}}';
 (function () {
@@ -1438,7 +1438,7 @@ function comparisonBody(m, mode) {
   if (m.mgrCount && (inc('quads') || inc('mgrtable'))) {
     const hasImp = hasImpData(m);
     const lowOf = r => (r.mgr !== null && r.mgr < LOW_RATING) || r.all < LOW_RATING;
-    h += '<h2>Self and manager</h2>';
+    h += '<div class="keep"><h2>Self and manager</h2>';
     if (m.mgrCount > 1) h += '<p class="rep-note" style="margin-top:0!important">More than one manager responded, so their ratings are averaged.</p>';
     if (hasImp && inc('quads')) {
       h += '<h3 style="margin-top:28px">Importance and rating</h3><p class="rep-note" style="margin-top:0!important">Each number is a competency (key below). Competencies in the lower right are rated below ' + LOW_RATING.toFixed(1) + ' but seen as important (' + IMPORTANT_MIN + ' or more). The four quadrants are drawn the same size, with the dividing lines at ' + (IMPORTANT_MIN - 0.5).toFixed(1) + ' and ' + LOW_RATING.toFixed(1) + '.</p><div class="quads">';
@@ -1447,6 +1447,7 @@ function comparisonBody(m, mode) {
       h += '<div><h3>Manager’s view</h3>' + quadSvg(ptsOf('mgrImp', 'mgr'), 'Manager') + '</div></div>';
       h += '<ul class="qkey">' + m.rows.map((r, i) => '<li><b>' + (i + 1) + '</b>' + esc(r.name) + '</li>').join('') + '</ul>';
     }
+    h += '</div>';
     if (inc('mgrtable')) {
     h += '<div class="table-wrap" style="margin-top:20px"><table><thead><tr><th>Competency</th><th class="num">Self rating</th><th class="num">Manager rating</th><th class="num">Gap</th>' + (hasImp ? '<th class="num">Self importance</th><th class="num">Manager importance</th><th>Note</th>' : '') + '</tr></thead><tbody>';
     m.rows.forEach(r => {
