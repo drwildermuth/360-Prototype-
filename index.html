@@ -919,7 +919,7 @@ function coverHtml(title, name, sub, preparedBy) {
     (sub ? '<p class="cover-sub">' + esc(sub) + '</p>' : '') + '<p class="cover-date">' + today() + '</p></div>' +
     '<div class="cover-foot">' + (preparedBy ? '<p><span>Prepared by</span> ' + esc(preparedBy) + '</p>' : '') +
     '<p><span>Instrument developed by</span> ' + esc(AUTHOR_NAME) + '</p>' +
-    '<p class="cover-small">© ' + yr + ' ' + esc(AUTHOR_NAME) + '. All rights reserved.</p>' +
+    '<p class="cover-small">© ' + yr + ' ' + esc(AUTHOR_NAME) + ' All rights reserved.</p>' +
     '<p class="cover-small">Confidential. Please do not share without permission.</p></div></section>';
 }
 const COVER_CSS = '.rep .cover{display:flex;flex-direction:column;justify-content:space-between;min-height:9.4in;break-after:page;page-break-after:always}' +
@@ -932,10 +932,23 @@ const COVER_CSS = '.rep .cover{display:flex;flex-direction:column;justify-conten
   '.rep .cover-foot{border-top:1px solid var(--line);padding-top:16px;font-size:13px;color:var(--ink-soft)}' +
   '.rep .cover-foot p{margin:0 0 6px}.rep .cover-foot span{color:var(--stone)}' +
   '.rep .cover-foot .cover-small{font-size:11.5px;color:var(--stone)}';
+function introHtml() {
+  return '<section class="intro">' +
+    '<h1>About this report</h1>' +
+    '<h3>Why you’re reading it</h3><p>This report is for your development. It is not a performance review, and nobody is grading you. It shows how your leadership is experienced by the people who work with you, next to how you see yourself. Use it to decide where you want to grow.</p>' +
+    '<h3>What it covers</h3><p>You and the people who gave you feedback rated ' + COMPETENCIES.length + ' leadership competencies, using ' + TOTAL_ITEMS + ' statements. Raters may include your manager, peers, and direct reports.</p>' +
+    '<h3>How to read the scores</h3><p>Every statement is rated from 1 (Strongly Disagree) to 5 (Strongly Agree). A competency score is the average of its statements. “All raters” combines everyone who rated you, including your manager. “Gap” is your score minus the raters’ score. A positive gap means you rated yourself higher than others did. A negative gap means others rated you higher than you rated yourself.</p>' +
+    '<p>Some pages also show importance, from 1 (Not important) to 5 (Critical). That tells you which competencies matter most in your role, and a low score on an important competency deserves attention first.</p>' +
+    '<h3>Confidentiality</h3><p>Comments appear without names. Raters are shown as a group only when at least ' + MIN_GROUP + ' people in that group responded. Otherwise their answers are combined so no one can be identified. Your manager’s ratings are shown separately. Please don’t try to work out who said what. It won’t help, and it isn’t the point.</p>' +
+    '<h3>How to get the most from it</h3><ul><li>Read it when you have time and a clear head.</li><li>Start with your strengths. Then look at the gaps.</li><li>Look for patterns across competencies, not single scores.</li><li>Ask yourself what surprised you, and what didn’t.</li><li>A gap is a difference in perception, not a verdict. It’s worth being curious about.</li></ul>' +
+    '<h3>What to do next</h3><p>Choose one or two areas to work on. Talk them over with your facilitator or coach. Then make a plan with specific actions and a date to check back.</p>' +
+    '</section>';
+}
+const INTRO_CSS = '.rep .intro{break-after:page;page-break-after:always}.rep .intro h1{font-size:28px;margin:0 0 18px}.rep .intro h3{margin:18px 0 6px}.rep .intro p{font-size:14px;line-height:1.55;margin:0 0 8px}.rep .intro ul{margin:4px 0 0;padding-left:20px;font-size:14px;line-height:1.55}.rep .intro li{margin:3px 0}';
 function printPdf(title, body, statusEl, cover) {
   const banner = '<div class="no-print" style="position:sticky;top:0;z-index:9;background:#5E3A99;color:#fff;padding:12px 16px;font-family:system-ui,-apple-system,Arial,sans-serif;font-size:14px;display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap"><span>Tap the button, then choose “Save as PDF” as the destination.</span><button type="button" onclick="window.print()" style="background:#fff;color:#5E3A99;border:0;border-radius:3px;padding:10px 18px;font-size:14px;font-weight:600;cursor:pointer">Save as PDF</button></div>';
-  const printCss = '@page{margin:16mm}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}@media print{.no-print{display:none!important}}' + COVER_CSS;
-  const html = docHtml(title, (cover || '') + body).replace('</style>', printCss + '</style>').replace('<body>', '<body>' + banner);
+  const printCss = '@page{margin:16mm}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}@media print{.no-print{display:none!important}}' + COVER_CSS + INTRO_CSS;
+  const html = docHtml(title, (cover || '') + (cover ? introHtml() : '') + body).replace('</style>', printCss + '</style>').replace('<body>', '<body>' + banner);
   const w = window.open('', '_blank');
   if (w) {
     w.document.open(); w.document.write(html); w.document.close();
