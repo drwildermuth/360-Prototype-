@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>MSLIN 360° Feedback — Prototype (Narrative brand)</title>
+<title>360° Feedback — Prototype (Narrative brand)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&family=Libre+Franklin:wght@400;500;600&display=swap" rel="stylesheet">
@@ -235,7 +235,7 @@
 <div class="app" id="app">
 
   <div class="masthead">
-    <span class="program">MSLIN &middot; Leadership Development 360&deg;</span>
+    <span class="program">Leadership Development 360&deg;</span>
     <span class="mode" id="modeLabel"></span>
   </div>
 
@@ -728,7 +728,7 @@ function singleReportBody(resp) {
   const hasImp = !!(resp.importance && resp.importance.some(v => v !== null));
   const rows = COMPETENCIES.map((c, ci) => ({name: c.name, imp: hasImp ? resp.importance[ci] : null, avg: mean(resp.ratings[ci]), items: c.items.map((p, ii) => ({text: isSelf ? p[0] : p[1], score: resp.ratings[ci][ii]}))}));
   const overall = mean(rows.map(r => r.avg));
-  let h = '<header><p class="rep-kicker">MSLIN · Leadership Development 360°</p>' +
+  let h = '<header><p class="rep-kicker">Leadership Development 360°</p>' +
     '<h1>' + (isSelf ? 'Self-Assessment Report' : 'Rater Feedback Report') + '</h1>' +
     '<p class="rep-sub">' + (isSelf ? esc(resp.student) : 'Feedback on ' + esc(resp.student) + ' · ' + esc(REL_LABEL[resp.relationship] || resp.relationship)) + ' · ' + today() + '</p>' +
     '<p class="rep-sub">Overall average: <strong>' + f1(overall) + '</strong> on a scale of 1 to 5</p></header>';
@@ -1325,7 +1325,7 @@ function comparisonBody(m, mode) {
   const inc = k => screen || incl[k] !== false;
   const rt = m.raters.length;
   const mgrAll = m.rows.some(r => r.mgr !== null) ? mean(m.rows.map(r => r.mgr)) : null;
-  let h = '<header><p class="rep-kicker">MSLIN · Leadership Development 360°</p><h1>360° Comparison Report</h1>' +
+  let h = '<header><p class="rep-kicker">Leadership Development 360°</p><h1>360° Comparison Report</h1>' +
     '<p class="rep-sub">' + esc(m.self.student) + ' · ' + today() + '</p>' +
     (inc('summary') ? '<div class="stats"><div class="stat self"><div class="v">' + f1(m.overallSelf) + '</div><div class="l">Self, overall</div></div>' +
     '<div class="stat raters"><div class="v">' + f1(m.overallAll) + '</div><div class="l">All raters, overall</div></div>' +
