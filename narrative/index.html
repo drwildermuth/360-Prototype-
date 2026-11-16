@@ -906,17 +906,27 @@ function copyFallback(btn) {
 
 /* ---------- PDF (uses the browser's print dialog: choose "Save as PDF") ---------- */
 function printPdf(title, body, statusEl) {
+  const banner = '<div class="no-print" style="position:sticky;top:0;z-index:9;background:#7F3B58;color:#fff;padding:12px 16px;font-family:system-ui,-apple-system,Arial,sans-serif;font-size:14px;display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap"><span>Tap the button, then choose \u201cSave as PDF\u201d as the destination.</span><button type="button" onclick="window.print()" style="background:#fff;color:#7F3B58;border:0;border-radius:3px;padding:10px 18px;font-size:14px;font-weight:600;cursor:pointer">Save as PDF</button></div>';
+  const printCss = '@page{margin:16mm}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}@media print{.no-print{display:none!important}}';
+  const html = docHtml(title, body).replace('</style>', printCss + '</style>').replace('<body>', '<body>' + banner);
+  const w = window.open('', '_blank');
+  if (w) {
+    w.document.open(); w.document.write(html); w.document.close();
+    statusEl.textContent = 'The report opened in a new tab. Tap Save as PDF at the top of that tab.';
+    return;
+  }
+  // pop-up blocked: print from a hidden frame instead
   const f = document.createElement('iframe');
   f.setAttribute('aria-hidden', 'true');
   f.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;';
-  f.srcdoc = docHtml(title, body).replace('</style>', '@page{margin:16mm}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}</style>');
+  f.srcdoc = html;
   const prevTitle = document.title;
   f.onload = () => {
     try { document.title = title; f.contentWindow.focus(); f.contentWindow.print(); }
-    catch (e) { statusEl.textContent = 'The print window could not open. Use the .html download instead, open it, and print it to PDF.'; }
+    catch (e) { statusEl.textContent = 'Your browser blocked the new tab. Allow pop-ups for this site and try again, or use the .html download.'; }
     setTimeout(() => { document.title = prevTitle; f.remove(); }, 60000);
   };
-  statusEl.textContent = 'In the print window that opens, choose \u201cSave as PDF\u201d as the destination.';
+  statusEl.textContent = 'If nothing opens, allow pop-ups for this site and try again.';
   document.body.appendChild(f);
 }
 function saveSinglePdf() {
